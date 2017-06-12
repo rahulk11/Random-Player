@@ -36,7 +36,7 @@ public class SongService extends Service {
     private PhoneStateListener phoneStateListener;
     private static MediaPlayer player;
     private static Context mContext;
-
+    String title="", artist = "";
     @Override
     public void onCreate() {
         super.onCreate();
@@ -84,11 +84,14 @@ public class SongService extends Service {
         String action = intent.getAction();
         if (action.equals(ACTION_PLAY)){
             String data = intent.getStringExtra("path");
+            title = intent.getStringExtra("songTitle");
+            artist = intent.getStringExtra("songArtist");
             try {
                 player.reset();
                 player.setDataSource(data);
                 player.prepare();
                 player.start();
+                new NotificationHandler(mContext, title, artist);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -99,6 +102,7 @@ public class SongService extends Service {
         } else if (action.equals(ACTION_RESUME)){
             if(player!=null){
                 player.start();
+                new NotificationHandler(mContext, title, artist);
             }
         }
         return Service.START_NOT_STICKY;

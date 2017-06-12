@@ -2,6 +2,9 @@ package net.trellisys.audioplayer;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,6 +19,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -140,10 +144,12 @@ public class PlaybackManager {
         }
     }
 
-    public static void playSong(String path){
+    public static void playSong(String path, String title, String artist){
         Intent i = new Intent(mContext, SongService.class);
         i.setAction(SongService.ACTION_PLAY);
         i.putExtra("path", path);
+        i.putExtra("songTitle", title);
+        i.putExtra("songArtist", artist);
         mContext.startService(i);
     }
 
@@ -154,7 +160,9 @@ public class PlaybackManager {
         if(pos>-1 && pos<songsList.size()){
             HashMap<String, String> hashMap = songsList.get(pos);
             ((MainActivity)mContext).loadSongInfo(hashMap);
-            playSong(hashMap.get(SONG_PATH));
+            playSong(hashMap.get(SONG_PATH),
+                    hashMap.get(SONG_TITLE),
+                    hashMap.get(ARTIST_NAME));
         }
     }
 
@@ -164,7 +172,9 @@ public class PlaybackManager {
         if(pos>-1 && pos<songsList.size()){
             HashMap<String, String> hashMap = songsList.get(pos);
             ((MainActivity)mContext).loadSongInfo(hashMap);
-            playSong(hashMap.get(SONG_PATH));
+            playSong(hashMap.get(SONG_PATH),
+                    hashMap.get(SONG_TITLE),
+                    hashMap.get(ARTIST_NAME));
         }
     }
 
@@ -200,4 +210,5 @@ public class PlaybackManager {
     public interface LoadSongListener {
         public void onDoneLoading();
     }
+
 }

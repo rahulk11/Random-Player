@@ -181,7 +181,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 HashMap<String, String> hashMap = PlaybackManager.songsList.get(position);
                 loadSongInfo(hashMap);
-                PlaybackManager.playSong(hashMap.get(SONG_PATH));
+                PlaybackManager.playSong(hashMap.get(SONG_PATH),
+                        hashMap.get(SONG_TITLE),
+                        hashMap.get(ARTIST_NAME));
                 btn_playpause.Play();
                 btn_playpausePanel.Play();
             }
