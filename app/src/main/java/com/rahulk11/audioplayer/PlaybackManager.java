@@ -1,38 +1,15 @@
-package net.trellisys.audioplayer;
+package com.rahulk11.audioplayer;
 
-import android.Manifest;
-import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
-import android.util.Log;
-import android.widget.RemoteViews;
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import static net.trellisys.audioplayer.MainActivity.ALBUM_NAME;
-import static net.trellisys.audioplayer.MainActivity.ARTIST_NAME;
-import static net.trellisys.audioplayer.MainActivity.SONG_DURATION;
-import static net.trellisys.audioplayer.MainActivity.SONG_ID;
-import static net.trellisys.audioplayer.MainActivity.SONG_PATH;
-import static net.trellisys.audioplayer.MainActivity.SONG_POS;
-import static net.trellisys.audioplayer.MainActivity.SONG_TITLE;
 
 /**
  * Created by rahul on 5/31/2017.
@@ -46,6 +23,7 @@ public class PlaybackManager {
             MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DURATION};
     private String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
     public static ArrayList<HashMap<String, String>> songsList = new ArrayList<HashMap<String, String>>();
+    public static ArrayList<Integer> shufflePosList = new ArrayList<>();
     public static final String songPref = "songPref";
     private static Context mContext;
     private static SharedPreferences sharedPref;
@@ -96,6 +74,7 @@ public class PlaybackManager {
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
+                    int i = 0;
                     do {
                         HashMap<String, String> song = new HashMap<String, String>();
                         String song_title = cursor
@@ -126,9 +105,9 @@ public class PlaybackManager {
                         song.put("albumName", album_name);
                         song.put("artistName", artist_name);
                         song.put("songDuration", "" + song_duration);
-
+                        song.put("songPosition", ""+i);
                         songsList.add(song);
-
+                        ++i;
                     } while (cursor.moveToNext());
 
                 }
@@ -144,67 +123,87 @@ public class PlaybackManager {
         }
     }
 
-    public static void playSong(String path, String title, String artist){
+    public static void playSong(String path, String title, String artist, String album){
         Intent i = new Intent(mContext, SongService.class);
         i.setAction(SongService.ACTION_PLAY);
         i.putExtra("path", path);
         i.putExtra("songTitle", title);
         i.putExtra("songArtist", artist);
+        i.putExtra("songAlbum", album);
         mContext.startService(i);
     }
 
     public static void playNext(boolean isShuffle){
 
-        int pos = Integer.parseInt(getLastPlayingSongPref().get(SONG_POS));
-        pos += 1;
+        int pos = Integer.parseInt(getLastPlayingSongPref().get(MainActivity.SONG_POS));
+        if(isShuffle) {
+            pos = shufflePos(0);
+        } else pos += 1;
         if(pos>-1 && pos<songsList.size()){
             HashMap<String, String> hashMap = songsList.get(pos);
             ((MainActivity)mContext).loadSongInfo(hashMap);
-            playSong(hashMap.get(SONG_PATH),
-                    hashMap.get(SONG_TITLE),
-                    hashMap.get(ARTIST_NAME));
+            playSong(hashMap.get(MainActivity.SONG_PATH),
+                    hashMap.get(MainActivity.SONG_TITLE),
+                    hashMap.get(MainActivity.ARTIST_NAME),
+                    hashMap.get(MainActivity.ALBUM_NAME));
         }
     }
 
-    public static void playPrev(){
-        int pos = Integer.parseInt(getLastPlayingSongPref().get(SONG_POS));
-        pos -= 1;
+    public static void playPrev(boolean isShuffle){
+        int pos = Integer.parseInt(getLastPlayingSongPref().get(MainActivity.SONG_POS));
+        if(isShuffle && shufflePosList.contains(pos)){
+            int index = shufflePosList.indexOf(pos);
+            if(index != 0)
+                pos = shufflePosList.get(index - 1);
+        } else pos -= 1;
         if(pos>-1 && pos<songsList.size()){
             HashMap<String, String> hashMap = songsList.get(pos);
             ((MainActivity)mContext).loadSongInfo(hashMap);
-            playSong(hashMap.get(SONG_PATH),
-                    hashMap.get(SONG_TITLE),
-                    hashMap.get(ARTIST_NAME));
+            playSong(hashMap.get(MainActivity.SONG_PATH),
+                    hashMap.get(MainActivity.SONG_TITLE),
+                    hashMap.get(MainActivity.ARTIST_NAME),
+                    hashMap.get(MainActivity.ALBUM_NAME));
         }
     }
 
     public void setLastPlayingSongPref(HashMap<String, String> songDetail) {
         SharedPreferences.Editor prefEditor = sharedPref.edit();
-        prefEditor.putString(SONG_TITLE, songDetail.get(SONG_TITLE))
-                .putString(SONG_ID, songDetail.get(SONG_ID))
-                .putString(ARTIST_NAME, songDetail.get(ARTIST_NAME))
-                .putString(ALBUM_NAME, songDetail.get(ALBUM_NAME))
-                .putString(SONG_DURATION, songDetail.get(SONG_DURATION))
-                .putString(SONG_PATH, songDetail.get(SONG_PATH))
-                .putString(SONG_POS, songDetail.get(SONG_POS));
+        prefEditor.putString(MainActivity.SONG_TITLE, songDetail.get(MainActivity.SONG_TITLE))
+                .putString(MainActivity.SONG_ID, songDetail.get(MainActivity.SONG_ID))
+                .putString(MainActivity.ARTIST_NAME, songDetail.get(MainActivity.ARTIST_NAME))
+                .putString(MainActivity.ALBUM_NAME, songDetail.get(MainActivity.ALBUM_NAME))
+                .putString(MainActivity.SONG_DURATION, songDetail.get(MainActivity.SONG_DURATION))
+                .putString(MainActivity.SONG_PATH, songDetail.get(MainActivity.SONG_PATH))
+                .putString(MainActivity.SONG_POS, songDetail.get(MainActivity.SONG_POS));
 
         prefEditor.commit();
     }
 
     public static HashMap<String, String>  getLastPlayingSongPref() {
         HashMap<String, String> hashMap = new HashMap<>();
-        hashMap.put(SONG_TITLE, sharedPref.getString(SONG_TITLE, ""));
-        hashMap.put(SONG_ID, sharedPref.getString(SONG_ID, ""));
-        hashMap.put(ARTIST_NAME, sharedPref.getString(ARTIST_NAME, ""));
-        hashMap.put(ALBUM_NAME, sharedPref.getString(ALBUM_NAME, ""));
-        hashMap.put(SONG_DURATION, sharedPref.getString(SONG_DURATION, ""+0));
-        hashMap.put(SONG_PATH, sharedPref.getString(SONG_PATH, ""));
-        hashMap.put(SONG_POS, sharedPref.getString(SONG_POS, ""+(-1)));
+        hashMap.put(MainActivity.SONG_TITLE, sharedPref.getString(MainActivity.SONG_TITLE, ""));
+        hashMap.put(MainActivity.SONG_ID, sharedPref.getString(MainActivity.SONG_ID, ""));
+        hashMap.put(MainActivity.ARTIST_NAME, sharedPref.getString(MainActivity.ARTIST_NAME, ""));
+        hashMap.put(MainActivity.ALBUM_NAME, sharedPref.getString(MainActivity.ALBUM_NAME, ""));
+        hashMap.put(MainActivity.SONG_DURATION, sharedPref.getString(MainActivity.SONG_DURATION, ""+0));
+        hashMap.put(MainActivity.SONG_PATH, sharedPref.getString(MainActivity.SONG_PATH, ""));
+        hashMap.put(MainActivity.SONG_POS, sharedPref.getString(MainActivity.SONG_POS, -1+""));
         return hashMap;
     }
 
-    private static int shufflePos(){
-        return 0;
+    private static int shufflePos(int i){
+        int min =0, max = songsList.size();
+        int range = (max - min) + 1;
+        int shuffledPos = (int)(Math.random() * range) + min;
+        if (shufflePosList.contains(shuffledPos) && i<3){
+            shufflePos(++i);
+        } else if(i>=3){
+//            shufflePosList = new ArrayList<>();
+//            shufflePosList.add(shuffledPos);
+            return shuffledPos;
+        }
+        shufflePosList.add(shuffledPos);
+        return shuffledPos;
     }
 
     public interface LoadSongListener {

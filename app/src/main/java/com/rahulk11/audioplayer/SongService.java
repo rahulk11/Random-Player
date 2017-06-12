@@ -1,9 +1,8 @@
-package net.trellisys.audioplayer;
+package com.rahulk11.audioplayer;
 
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.IBinder;
@@ -13,16 +12,6 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import java.io.IOException;
-import java.util.HashMap;
-
-import static net.trellisys.audioplayer.MainActivity.ALBUM_NAME;
-import static net.trellisys.audioplayer.MainActivity.ARTIST_NAME;
-import static net.trellisys.audioplayer.MainActivity.SONG_DURATION;
-import static net.trellisys.audioplayer.MainActivity.SONG_ID;
-import static net.trellisys.audioplayer.MainActivity.SONG_PATH;
-import static net.trellisys.audioplayer.MainActivity.SONG_POS;
-import static net.trellisys.audioplayer.MainActivity.SONG_TITLE;
-import static net.trellisys.audioplayer.PlaybackManager.songsList;
 
 /**
  * Created by rahul on 6/9/2017.
@@ -36,7 +25,7 @@ public class SongService extends Service {
     private PhoneStateListener phoneStateListener;
     private static MediaPlayer player;
     private static Context mContext;
-    String title="", artist = "";
+    String title="", artist = "", album = "";
     @Override
     public void onCreate() {
         super.onCreate();
@@ -46,7 +35,7 @@ public class SongService extends Service {
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                PlaybackManager.playNext(false);
+                PlaybackManager.playNext(true);
             }
         });
         try {
@@ -86,12 +75,13 @@ public class SongService extends Service {
             String data = intent.getStringExtra("path");
             title = intent.getStringExtra("songTitle");
             artist = intent.getStringExtra("songArtist");
+            album = intent.getStringExtra("songAlbum");
             try {
                 player.reset();
                 player.setDataSource(data);
                 player.prepare();
                 player.start();
-                new NotificationHandler(mContext, title, artist);
+                new NotificationHandler(mContext, title, artist, album);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -102,7 +92,7 @@ public class SongService extends Service {
         } else if (action.equals(ACTION_RESUME)){
             if(player!=null){
                 player.start();
-                new NotificationHandler(mContext, title, artist);
+                new NotificationHandler(mContext, title, artist, album);
             }
         }
         return Service.START_NOT_STICKY;

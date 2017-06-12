@@ -4,7 +4,7 @@
  * Copyright @Dibakar_Mistry, 2015.
  */
 
-package net.trellisys.audioplayer.slidinguppanelhelper;
+package com.rahulk11.audioplayer.slidinguppanelhelper;
 
 import android.content.Context;
 import android.support.v4.view.MotionEventCompat;

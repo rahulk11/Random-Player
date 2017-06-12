@@ -3,7 +3,7 @@
  * You should have received a copy of the license in this archive (see LICENSE).
  * Copyright @Dibakar_Mistry, 2015.
  */
-package net.trellisys.audioplayer.slidinguppanelhelper;
+package com.rahulk11.audioplayer.slidinguppanelhelper;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -25,7 +25,7 @@ import android.view.ViewOutlineProvider;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
-import net.trellisys.audioplayer.R;
+import com.rahulk11.audioplayer.R;
 
 public class PlayPauseView extends FrameLayout {
 

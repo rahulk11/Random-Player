@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="net.trellisys.audioplayer">
+    package="com.rahulk11.audioplayer">
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <application
@@ -18,9 +18,9 @@
             </intent-filter>
         </activity>
         <service android:name=".SongService" />
-        <receiver android:name="net.trellisys.audioplayer.AudioPlayerBroadcastReceiver" >
+        <receiver android:name="com.rahulk11.audioplayer.AudioPlayerBroadcastReceiver" >
             <intent-filter>
-                <action android:name="net.trellisys.audioplayer.ACTION_PLAY" />
+                <action android:name="com.rahulk11.audioplayer.ACTION_PLAY" />
             </intent-filter>
         </receiver>
     </application>

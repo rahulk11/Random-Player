@@ -1,4 +1,4 @@
-package net.trellisys.audioplayer.slidinguppanelhelper;
+package com.rahulk11.audioplayer.slidinguppanelhelper;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -20,7 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 
-import net.trellisys.audioplayer.R;
+import com.rahulk11.audioplayer.R;
 
 public class SlidingUpPanelLayout extends ViewGroup {
 

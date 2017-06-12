@@ -1,4 +1,4 @@
-package net.trellisys.audioplayer;
+package com.rahulk11.audioplayer;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -6,8 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
-
-import net.trellisys.audioplayer.slidinguppanelhelper.PlayPauseView;
 
 /**
  * Created by rahul on 6/12/2017.
@@ -18,7 +16,7 @@ public class NotificationHandler extends Notification{
         private Context ctx;
         private NotificationManager mNotificationManager;
 
-        public NotificationHandler(Context ctx, String title, String artist){
+        public NotificationHandler(Context ctx, String title, String artist, String album){
             super();
             this.ctx=ctx;
             String ns = Context.NOTIFICATION_SERVICE;
@@ -28,6 +26,7 @@ public class NotificationHandler extends Notification{
             RemoteViews notificationView = new RemoteViews(ctx.getPackageName(), R.layout.notification_layout);
             notificationView.setTextViewText(R.id.songTitle, title);
             notificationView.setTextViewText(R.id.songArtist, artist);
+            notificationView.setTextViewText(R.id.songAlbum, album);
             //the intent that is started when the notification is clicked (works)
             Intent notificationIntent = new Intent(ctx, MainActivity.class);
             PendingIntent pendingNotificationIntent = PendingIntent.getActivity(ctx, 0, notificationIntent, 0);
@@ -39,7 +38,7 @@ public class NotificationHandler extends Notification{
             Intent switchIntent = new Intent("net.trellisys.audioplayer.ACTION_PLAY");
             PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(ctx, 0, switchIntent, 0);
 
-            notificationView.setOnClickPendingIntent(R.id.playPauseNotif, pendingSwitchIntent);
+            notificationView.setOnClickPendingIntent(R.id.playPauseNotifBtn, pendingSwitchIntent);
             mNotificationManager.notify(1, notification);
         }
 
@@ -72,7 +71,7 @@ public class NotificationHandler extends Notification{
             Intent app=new Intent(ctx, MainActivity.class);
             app.putExtra("DO", "app");
             PendingIntent pApp = PendingIntent.getActivity(ctx, 4, app, 0);
-            view.setOnClickPendingIntent(R.id.playPauseNotif, pApp);
+            view.setOnClickPendingIntent(R.id.playPauseNotifBtn, pApp);
         }
 
 }

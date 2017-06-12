@@ -1,4 +1,4 @@
-package net.trellisys.audioplayer;
+package com.rahulk11.audioplayer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

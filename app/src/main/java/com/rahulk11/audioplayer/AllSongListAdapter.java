@@ -1,4 +1,4 @@
-package net.trellisys.audioplayer;
+package com.rahulk11.audioplayer;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -10,12 +10,12 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import com.rahulk11.audioplayer.R;
 
 /**
  * Created by rahul on 6/8/2017.
@@ -31,10 +31,6 @@ public class AllSongListAdapter extends BaseAdapter {
         this.mContext = mContext;
         this.layoutInflater = LayoutInflater.from(mContext);
         this.sList = sList;
-    }
-
-    public ArrayList<HashMap<String, String>> getNewList(){
-        return sList;
     }
 
     @Override
@@ -63,7 +59,6 @@ public class AllSongListAdapter extends BaseAdapter {
         } else {
             mViewHolder = (ViewHolder) convertView.getTag();
         }
-        sList.get(position).put("songPosition", ""+position);
         String title = "";
         String path = "";
         if (position < sList.size()) {
@@ -121,7 +116,6 @@ public class AllSongListAdapter extends BaseAdapter {
                 }
             }
         });
-
         return convertView;
     }
 

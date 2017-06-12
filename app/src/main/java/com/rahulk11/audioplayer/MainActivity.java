@@ -1,4 +1,4 @@
-package net.trellisys.audioplayer;
+package com.rahulk11.audioplayer;
 
 import android.Manifest;
 import android.content.Context;
@@ -17,10 +17,9 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import net.trellisys.audioplayer.slidinguppanelhelper.PlayPauseView;
-import net.trellisys.audioplayer.slidinguppanelhelper.SlidingUpPanelLayout;
+import com.rahulk11.audioplayer.slidinguppanelhelper.PlayPauseView;
+import com.rahulk11.audioplayer.slidinguppanelhelper.SlidingUpPanelLayout;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         getSupportActionBar().hide();
         mContext = this;
-        setContentView(R.layout.activity_main);
+        setContentView(com.rahulk11.audioplayer.R.layout.activity_main);
         init();
         initListeners();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -72,19 +71,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void init() {
-        recycler_songslist = (ListView) findViewById(R.id.recycler_allSongs);
-        mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        songAlbumbg = (ImageView) findViewById(R.id.image_songAlbumbg_mid);
-        img_bottom_slideone = (ImageView) findViewById(R.id.img_bottom_slideone);
-        img_bottom_slidetwo = (ImageView) findViewById(R.id.img_bottom_slidetwo);
+        recycler_songslist = (ListView) findViewById(com.rahulk11.audioplayer.R.id.recycler_allSongs);
+        mLayout = (SlidingUpPanelLayout) findViewById(com.rahulk11.audioplayer.R.id.sliding_layout);
+        songAlbumbg = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.image_songAlbumbg_mid);
+        img_bottom_slideone = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.img_bottom_slideone);
+        img_bottom_slidetwo = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.img_bottom_slidetwo);
 
-        txt_timeprogress = (TextView) findViewById(R.id.slidepanel_time_progress);
-        txt_timetotal = (TextView) findViewById(R.id.slidepanel_time_total);
-        imgbtn_backward = (ImageView) findViewById(R.id.btn_backward);
-        imgbtn_forward = (ImageView) findViewById(R.id.btn_forward);
+        txt_timeprogress = (TextView) findViewById(com.rahulk11.audioplayer.R.id.slidepanel_time_progress);
+        txt_timetotal = (TextView) findViewById(com.rahulk11.audioplayer.R.id.slidepanel_time_total);
+        imgbtn_backward = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.btn_backward);
+        imgbtn_forward = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.btn_forward);
 
-        btn_playpause = (PlayPauseView) findViewById(R.id.btn_play);
-        btn_playpausePanel = (PlayPauseView) findViewById(R.id.bottombar_play);
+        btn_playpause = (PlayPauseView) findViewById(com.rahulk11.audioplayer.R.id.btn_play);
+        btn_playpausePanel = (PlayPauseView) findViewById(com.rahulk11.audioplayer.R.id.bottombar_play);
 
         btn_playpausePanel.Pause();
         btn_playpause.Pause();
@@ -92,18 +91,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btn_playpause.setOnClickListener(this);
 
         TypedValue typedvaluecoloraccent = new TypedValue();
-        getTheme().resolveAttribute(R.attr.colorAccent, typedvaluecoloraccent, true);
+        getTheme().resolveAttribute(com.rahulk11.audioplayer.R.attr.colorAccent, typedvaluecoloraccent, true);
         imgbtn_backward.setOnClickListener(this);
         imgbtn_forward.setOnClickListener(this);
 
 
-        txt_playesongname = (TextView) findViewById(R.id.txt_playesongname);
-        txt_songartistname = (TextView) findViewById(R.id.txt_songartistname);
-        txt_playesongname_slidetoptwo = (TextView) findViewById(R.id.txt_playesongname_slidetoptwo);
-        txt_songartistname_slidetoptwo = (TextView) findViewById(R.id.txt_songartistname_slidetoptwo);
+        txt_playesongname = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_playesongname);
+        txt_songartistname = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_songartistname);
+        txt_playesongname_slidetoptwo = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_playesongname_slidetoptwo);
+        txt_songartistname_slidetoptwo = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_songartistname_slidetoptwo);
 
-        slidepanelchildtwo_topviewone = (RelativeLayout) findViewById(R.id.slidepanelchildtwo_topviewone);
-        slidepanelchildtwo_topviewtwo = (RelativeLayout) findViewById(R.id.slidepanelchildtwo_topviewtwo);
+        slidepanelchildtwo_topviewone = (RelativeLayout) findViewById(com.rahulk11.audioplayer.R.id.slidepanelchildtwo_topviewone);
+        slidepanelchildtwo_topviewtwo = (RelativeLayout) findViewById(com.rahulk11.audioplayer.R.id.slidepanelchildtwo_topviewtwo);
 
         slidepanelchildtwo_topviewone.setVisibility(View.VISIBLE);
         slidepanelchildtwo_topviewtwo.setVisibility(View.INVISIBLE);
@@ -181,9 +180,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 HashMap<String, String> hashMap = PlaybackManager.songsList.get(position);
                 loadSongInfo(hashMap);
-                PlaybackManager.playSong(hashMap.get(SONG_PATH),
-                        hashMap.get(SONG_TITLE),
-                        hashMap.get(ARTIST_NAME));
+                PlaybackManager.playSong(hashMap.get(MainActivity.SONG_PATH),
+                        hashMap.get(MainActivity.SONG_TITLE),
+                        hashMap.get(MainActivity.ARTIST_NAME),
+                        hashMap.get(MainActivity.ALBUM_NAME));
                 btn_playpause.Play();
                 btn_playpausePanel.Play();
             }
@@ -193,27 +193,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void setAllSongs() {
         mAllSongsListAdapter = new AllSongListAdapter(mContext, PlaybackManager.songsList);
         recycler_songslist.setAdapter(mAllSongsListAdapter);
-        PlaybackManager.songsList = mAllSongsListAdapter.getNewList();
     }
 
     @Override
     public void onClick(View v) {
 
         switch (v.getId()) {
-            case R.id.bottombar_play:
+            case com.rahulk11.audioplayer.R.id.bottombar_play:
                 playPauseEvent();
                 break;
 
-            case R.id.btn_play:
+            case com.rahulk11.audioplayer.R.id.btn_play:
                 playPauseEvent();
                 break;
 
-            case R.id.btn_forward:
-                    playbackManager.playNext(false);
+            case com.rahulk11.audioplayer.R.id.btn_forward:
+                    playbackManager.playNext(true);
                 break;
 
-            case R.id.btn_backward:
-                playbackManager.playPrev();
+            case com.rahulk11.audioplayer.R.id.btn_backward:
+                playbackManager.playPrev(true);
                 break;
 
             default:
