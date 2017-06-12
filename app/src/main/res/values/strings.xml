@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AudioPlayer</string>
+    <string name="DataBaseName">AudioPlayer</string>
+    <string name="DataBaseName_Version">1.0</string>
+</resources>

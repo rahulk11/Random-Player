@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dragView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/image_songAlbumbg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:background="#4d000000"
+        android:visibility="invisible"></ImageView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:focusable="false"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize">
+
+            <include
+                android:id="@+id/slidepanelchildtwo_topviewone"
+                layout="@layout/slidepanelchildtwo_topviewone"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize" />
+
+            <include
+                android:id="@+id/slidepanelchildtwo_topviewtwo"
+                layout="@layout/slidepanelchildtwo_topviewtwo"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:visibility="invisible" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/bottom_playLayout">
+
+                <ImageView
+                    android:id="@+id/image_songAlbumbg_mid"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:background="@mipmap/ic_launcher"
+                    android:visibility="visible"></ImageView>
+
+                <View
+                    android:id="@+id/vBgLike"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#4d000000"
+                    android:visibility="invisible" />
+
+                <ImageView
+                    android:id="@+id/ivLike"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="center"
+                    android:background="@mipmap/ic_launcher_round"
+                    android:visibility="invisible" />
+
+            </RelativeLayout>
+
+
+            <include
+                android:id="@+id/bottom_playLayout"
+                layout="@layout/slidepanelchildtwo_bottomview"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentStart="true" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</RelativeLayout>

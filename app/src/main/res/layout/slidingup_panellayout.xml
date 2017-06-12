@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffffff"
+    android:orientation="vertical">
+
+    <net.trellisys.audioplayer.slidinguppanelhelper.SlidingUpPanelLayout xmlns:sothree="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/sliding_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        sothree:dragView="@+id/dragView"
+        sothree:overlay="true"
+        sothree:panelHeight="?attr/actionBarSize"
+        sothree:paralaxOffset="0dp"
+        sothree:shadowHeight="4dp">
+
+        <!-- MAIN CONTENT -->
+
+        <include
+            android:id="@+id/sliding_panelchildone"
+            layout="@layout/slidingpanel_childone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- SLIDING LAYOUT -->
+
+        <include
+            android:id="@+id/sliding_panel_childtwo"
+            layout="@layout/slidingpanel_childtwo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </net.trellisys.audioplayer.slidinguppanelhelper.SlidingUpPanelLayout>
+
+</LinearLayout>
