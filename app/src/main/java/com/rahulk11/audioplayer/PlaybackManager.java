@@ -123,6 +123,29 @@ public class PlaybackManager {
         }
     }
 
+    public static void stopService(){
+        mContext.startService(
+                new Intent(mContext, SongService.class).setAction(SongService.ACTION_STOP));
+        ((MainActivity)mContext).setPlayPauseView(false);
+    }
+
+    public static boolean playPauseEvent() {
+        if (SongService.isPlaying()) {
+            ((MainActivity)mContext).setPlayPauseView(false);
+            mContext.startService(
+                    new Intent(mContext, SongService.class).setAction(SongService.ACTION_PAUSE));
+            return false;
+        } else {
+            if (!PlaybackManager.getLastPlayingSongPref().get(MainActivity.SONG_ID).equals("")) {
+                ((MainActivity)mContext).setPlayPauseView(true);
+                mContext.startService(
+                        new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void playSong(String path, String title, String artist, String album){
         Intent i = new Intent(mContext, SongService.class);
         i.setAction(SongService.ACTION_PLAY);
@@ -137,7 +160,7 @@ public class PlaybackManager {
 
         int pos = Integer.parseInt(getLastPlayingSongPref().get(MainActivity.SONG_POS));
         if(isShuffle) {
-            pos = shufflePos(0);
+                pos = shufflePos(0);
         } else pos += 1;
         if(pos>-1 && pos<songsList.size()){
             HashMap<String, String> hashMap = songsList.get(pos);

@@ -21,6 +21,7 @@ public class SongService extends Service {
     public final static String ACTION_PLAY = "PLAY";
     public final static String ACTION_PAUSE = "PAUSE";
     public final static String ACTION_RESUME = "RESUME";
+    public final static String ACTION_STOP = "STOP";
     private AudioManager audioManager;
     private PhoneStateListener phoneStateListener;
     private static MediaPlayer player;
@@ -81,18 +82,23 @@ public class SongService extends Service {
                 player.setDataSource(data);
                 player.prepare();
                 player.start();
-                new NotificationHandler(mContext, title, artist, album);
+                new NotificationHandler(mContext, title, artist, album, true);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else if (action.equals(ACTION_PAUSE)){
             if(player.isPlaying()){
                 player.pause();
+                new NotificationHandler(mContext, title, artist, album, false);
             }
         } else if (action.equals(ACTION_RESUME)){
             if(player!=null){
                 player.start();
-                new NotificationHandler(mContext, title, artist, album);
+                new NotificationHandler(mContext, title, artist, album, true);
+            }
+        }else if (action.equals(ACTION_STOP)){
+            if(player!=null){
+                stopSelf();
             }
         }
         return Service.START_NOT_STICKY;
@@ -113,7 +119,7 @@ public class SongService extends Service {
     public void onDestroy() {
         player.stop();
         player.release();
-        PlaybackManager.songsList.clear();
+        player = null;
         stopSelf();
     }
 

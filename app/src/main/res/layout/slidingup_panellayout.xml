@@ -5,16 +5,16 @@
     android:background="#ffffff"
     android:orientation="vertical">
 
-    <com.rahulk11.audioplayer.slidinguppanelhelper.SlidingUpPanelLayout xmlns:sothree="http://schemas.android.com/apk/res-auto"
+    <com.rahulk11.audioplayer.slidinguppanelhelper.SlidingUpPanelLayout xmlns:abszero="http://schemas.android.com/apk/res-auto"
         android:id="@+id/sliding_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="bottom"
-        sothree:dragView="@+id/dragView"
-        sothree:overlay="true"
-        sothree:panelHeight="?attr/actionBarSize"
-        sothree:paralaxOffset="0dp"
-        sothree:shadowHeight="4dp">
+        abszero:dragView="@+id/dragView"
+        abszero:overlay="true"
+        abszero:panelHeight="?attr/actionBarSize"
+        abszero:paralaxOffset="0dp"
+        abszero:shadowHeight="4dp">
 
         <!-- MAIN CONTENT -->
 

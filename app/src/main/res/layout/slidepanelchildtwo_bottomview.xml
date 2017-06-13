@@ -31,16 +31,11 @@
                 android:textColor="@android:color/white"
                 android:textSize="14sp" />
 
-         <!--   <com.dmplayer.uicomponent.Slider
-                android:id="@+id/audio_progress_control"
+            <SeekBar
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_toLeftOf="@+id/slidepanel_time_total"
-                android:layout_toRightOf="@+id/slidepanel_time_progress"
-                android:background="#1E88E5"
-                app:max="100"
-                app:min="0" /> -->
+                android:layout_toRightOf="@id/slidepanel_time_progress"
+                android:layout_toLeftOf="@+id/slidepanel_time_total"/>
 
 
             <TextView

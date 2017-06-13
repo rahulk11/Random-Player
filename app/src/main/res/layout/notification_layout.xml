@@ -8,7 +8,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_weight="0.4"
+        android:layout_weight="0.40"
         android:layout_gravity="center_vertical"/>
 
     <LinearLayout
@@ -46,31 +46,50 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="0.6"
+        android:layout_weight="0.60"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:weightSum="3">
 
         <ImageButton
-            android:id="@+id/playPauseNotifBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="2dp"
+            android:id="@+id/pauseNotifBtn"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1.1"
+            android:padding="3dp"
             android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_media_play" />
+            android:background="@android:color/transparent"
+            android:src="@drawable/pause_button" />
+
+        <ImageButton
+            android:id="@+id/playNotifBtn"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1.1"
+            android:padding="3dp"
+            android:scaleType="centerCrop"
+            android:background="@android:color/transparent"
+            android:src="@drawable/play_button"
+            android:visibility="gone"/>
 
         <ImageButton
             android:id="@+id/nextNotifBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="2dp"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1.1"
+            android:padding="3dp"
+            android:layout_marginLeft="3dp"
             android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_media_next" />
+            android:background="@android:color/transparent"
+            android:src="@drawable/next_button" />
         <ImageButton
             android:id="@+id/closeNotifBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="2dp"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="0.8"
+            android:padding="5dp"
             android:scaleType="centerCrop"
+            android:background="@android:color/transparent"
             android:src="@android:drawable/ic_menu_close_clear_cancel" />
 
     </LinearLayout>

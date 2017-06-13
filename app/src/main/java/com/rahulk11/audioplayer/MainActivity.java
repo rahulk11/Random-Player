@@ -9,9 +9,11 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -52,10 +54,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getSupportActionBar().hide();
         mContext = this;
         setContentView(com.rahulk11.audioplayer.R.layout.activity_main);
         init();
+        toolbarStatusBar();
         initListeners();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             playbackManager = new PlaybackManager(mContext);
@@ -66,10 +68,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public static Context getInstance() {
-        return mContext;
+    public void toolbarStatusBar() {
+        //FrameLayout statusBar = (FrameLayout) findViewById(R.id.statusBar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitle("Audio Player");
     }
-
     private void init() {
         recycler_songslist = (ListView) findViewById(com.rahulk11.audioplayer.R.id.recycler_allSongs);
         mLayout = (SlidingUpPanelLayout) findViewById(com.rahulk11.audioplayer.R.id.sliding_layout);
@@ -200,11 +204,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (v.getId()) {
             case com.rahulk11.audioplayer.R.id.bottombar_play:
-                playPauseEvent();
+
+                if(PlaybackManager.playPauseEvent()){
+                    btn_playpause.Play();
+                    btn_playpausePanel.Play();
+                } else {
+                    btn_playpause.Pause();
+                    btn_playpausePanel.Pause();
+                }
+
                 break;
 
             case com.rahulk11.audioplayer.R.id.btn_play:
-                playPauseEvent();
+                if(PlaybackManager.playPauseEvent()){
+                    btn_playpause.Play();
+                    btn_playpausePanel.Play();
+                } else {
+                    btn_playpause.Pause();
+                    btn_playpausePanel.Pause();
+                }
                 break;
 
             case com.rahulk11.audioplayer.R.id.btn_forward:
@@ -219,20 +237,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
 
-    }
-
-    private void playPauseEvent() {
-        if (SongService.isPlaying()) {
-            btn_playpause.Pause();
-            btn_playpausePanel.Pause();
-            startService(new Intent(mContext, SongService.class).setAction(SongService.ACTION_PAUSE));
-        } else {
-            if (!PlaybackManager.getLastPlayingSongPref().get(SONG_ID).equals("")) {
-                startService(new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
-                btn_playpause.Play();
-                btn_playpausePanel.Play();
-            }
-        }
     }
 
     public void loadSongInfo(HashMap<String, String> songDetail) {
@@ -285,12 +289,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-        setPlayPauseView();
+        setPlayPauseView(SongService.isPlaying());
         loadSongInfo(PlaybackManager.getLastPlayingSongPref());
     }
 
-    private void setPlayPauseView() {
-        if (SongService.isPlaying()) {
+    public void setPlayPauseView(boolean isPlaying) {
+        if(btn_playpause != null)
+        if (isPlaying) {
             btn_playpause.Play();
             btn_playpausePanel.Play();
         } else {
