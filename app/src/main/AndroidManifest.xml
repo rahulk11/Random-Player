@@ -3,6 +3,7 @@
     package="com.rahulk11.audioplayer">
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -19,12 +20,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".SongService" />
+        <service android:name=".SongService"/>
         <receiver android:name="com.rahulk11.audioplayer.NotificationHandler$NotifBtnClickReceiver" >
             <intent-filter>
                 <action android:name="com.rahulk11.audioplayer.ACTION_PLAY" />
                 <action android:name="com.rahulk11.audioplayer.ACTION_NEXT" />
                 <action android:name="com.rahulk11.audioplayer.ACTION_CLOSE" />
+                <action android:name="android.intent.action.HEADSET_PLUG" />
             </intent-filter>
         </receiver>
     </application>

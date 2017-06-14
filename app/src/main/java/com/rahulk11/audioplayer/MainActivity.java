@@ -38,9 +38,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String ALBUM_NAME = "albumName";
     public static final String ARTIST_NAME = "artistName";
     public static final String SONG_DURATION = "songDuration";
-    public static final String SONG_POS = "songPosition";
+    public static final String SONG_POS = "songPosInList";
 
-    private ListView recycler_songslist;
+    private ListView lv_songslist;
     private AllSongListAdapter mAllSongsListAdapter;
     private SlidingUpPanelLayout mLayout;
     private ImageView songAlbumbg, img_bottom_slideone, img_bottom_slidetwo,
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void init() {
-        recycler_songslist = (ListView) findViewById(com.rahulk11.audioplayer.R.id.recycler_allSongs);
+        lv_songslist = (ListView) findViewById(com.rahulk11.audioplayer.R.id.recycler_allSongs);
         mLayout = (SlidingUpPanelLayout) findViewById(com.rahulk11.audioplayer.R.id.sliding_layout);
         songAlbumbg = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.image_songAlbumbg_mid);
         img_bottom_slideone = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.img_bottom_slideone);
@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
 
-        recycler_songslist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        lv_songslist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 HashMap<String, String> hashMap = PlaybackManager.songsList.get(position);
@@ -248,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void setAllSongs() {
         mAllSongsListAdapter = new AllSongListAdapter(mContext, PlaybackManager.songsList);
-        recycler_songslist.setAdapter(mAllSongsListAdapter);
+        lv_songslist.setAdapter(mAllSongsListAdapter);
     }
 
     @Override
@@ -257,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case com.rahulk11.audioplayer.R.id.bottombar_play:
 
-                if (PlaybackManager.playPauseEvent()) {
+                if (PlaybackManager.playPauseEvent(false)) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                     shouldContinue = true;
@@ -272,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case com.rahulk11.audioplayer.R.id.btn_play:
-                if (PlaybackManager.playPauseEvent()) {
+                if (PlaybackManager.playPauseEvent(false)) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                     shouldContinue = true;
@@ -314,11 +314,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             seekBar.setProgress(0);
             seekBar.setMax(Integer.parseInt(songDetail.get(SONG_DURATION)) / 1000);
             shouldContinue = true;
+            txt_timeprogress.setText("0:00");
             if (seeking) {
                 thread = new Thread(runnable);
                 thread.start();
-            } else {
-                txt_timeprogress.setText("0:00");
             }
         }
 
@@ -357,6 +356,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (isPlaying) {
                 btn_playpause.Play();
                 btn_playpausePanel.Play();
+                shouldContinue = true;
             } else {
                 btn_playpause.Pause();
                 btn_playpausePanel.Pause();
@@ -364,5 +364,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
     }
 
-    boolean shouldContinue = false;
+    public static boolean shouldContinue = false;
 }

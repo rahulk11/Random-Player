@@ -9,9 +9,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.media.AudioManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
+
+import static android.content.Context.AUDIO_SERVICE;
 
 /**
  * Created by rahul on 6/12/2017.
@@ -77,7 +80,7 @@ public class NotificationHandler extends Notification {
             String action = intent.getAction();
             switch (action) {
                 case ACTION_PLAY:
-                    PlaybackManager.playPauseEvent();
+                    PlaybackManager.playPauseEvent(false);
                     break;
                 case ACTION_NEXT:
                     PlaybackManager.playNext(true);
@@ -86,6 +89,12 @@ public class NotificationHandler extends Notification {
                     mNotificationManager.cancel(notifID);
                     PlaybackManager.stopService();
                     break;
+                case Intent.ACTION_HEADSET_PLUG:
+                    //noinspection deprecation
+                    if (!((AudioManager)ctx.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn())
+                        PlaybackManager.playPauseEvent(true);
+                    break;
+
             }
         }
     }
