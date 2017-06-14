@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,12 +18,14 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.rahulk11.audioplayer.slidinguppanelhelper.PlayPauseView;
 import com.rahulk11.audioplayer.slidinguppanelhelper.SlidingUpPanelLayout;
 
 import java.util.HashMap;
+import java.util.concurrent.RunnableFuture;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -50,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isExpand = false;
     private SharedPreferences sharedPref;
     private PlaybackManager playbackManager;
+    private SeekBar seekBar;
+    Thread thread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,11 +74,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void toolbarStatusBar() {
-        //FrameLayout statusBar = (FrameLayout) findViewById(R.id.statusBar);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle("Audio Player");
     }
+
     private void init() {
         recycler_songslist = (ListView) findViewById(com.rahulk11.audioplayer.R.id.recycler_allSongs);
         mLayout = (SlidingUpPanelLayout) findViewById(com.rahulk11.audioplayer.R.id.sliding_layout);
@@ -88,17 +93,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         btn_playpause = (PlayPauseView) findViewById(com.rahulk11.audioplayer.R.id.btn_play);
         btn_playpausePanel = (PlayPauseView) findViewById(com.rahulk11.audioplayer.R.id.bottombar_play);
-
+        seekBar = (SeekBar) findViewById(R.id.seekbar);
+        seekBar.setEnabled(false);
         btn_playpausePanel.Pause();
         btn_playpause.Pause();
-        btn_playpausePanel.setOnClickListener(this);
-        btn_playpause.setOnClickListener(this);
 
         TypedValue typedvaluecoloraccent = new TypedValue();
         getTheme().resolveAttribute(com.rahulk11.audioplayer.R.attr.colorAccent, typedvaluecoloraccent, true);
-        imgbtn_backward.setOnClickListener(this);
-        imgbtn_forward.setOnClickListener(this);
-
 
         txt_playesongname = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_playesongname);
         txt_songartistname = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_songartistname);
@@ -110,13 +111,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         slidepanelchildtwo_topviewone.setVisibility(View.VISIBLE);
         slidepanelchildtwo_topviewtwo.setVisibility(View.INVISIBLE);
+    }
+
+    private void initListeners() {
+        btn_playpausePanel.setOnClickListener(this);
+        btn_playpause.setOnClickListener(this);
+        imgbtn_backward.setOnClickListener(this);
+        imgbtn_forward.setOnClickListener(this);
 
         slidepanelchildtwo_topviewone.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 mLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
-
             }
         });
 
@@ -125,13 +132,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View v) {
                 mLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-
             }
         });
-
-    }
-
-    private void initListeners() {
 
         mLayout.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
@@ -179,11 +181,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+
         recycler_songslist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 HashMap<String, String> hashMap = PlaybackManager.songsList.get(position);
-                loadSongInfo(hashMap);
+                loadSongInfo(hashMap, true);
                 PlaybackManager.playSong(hashMap.get(MainActivity.SONG_PATH),
                         hashMap.get(MainActivity.SONG_TITLE),
                         hashMap.get(MainActivity.ARTIST_NAME),
@@ -192,7 +195,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 btn_playpausePanel.Play();
             }
         });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    PlaybackManager.seekTo(progress * 1000);
+                    seekBar.setProgress(progress);
+                    shouldContinue = true;
+                    txt_timeprogress.setText(calculateDuration(progress * 1000));
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
+
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            int currSeekPos = SongService.getCurrPos();
+            int max = seekBar.getMax();
+
+            while (currSeekPos < max && shouldContinue) {
+                try {
+                    Thread.sleep(1000);
+                    currSeekPos = SongService.getCurrPos();
+                    final int finalCurrSeekPos = currSeekPos * 1000;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            txt_timeprogress.setText(calculateDuration(finalCurrSeekPos));
+                        }
+                    });
+                } catch (InterruptedException e) {
+                    return;
+                } catch (Exception e) {
+                    return;
+                }
+                seekBar.setProgress(currSeekPos);
+            }
+        }
+    };
 
     public void setAllSongs() {
         mAllSongsListAdapter = new AllSongListAdapter(mContext, PlaybackManager.songsList);
@@ -205,28 +257,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case com.rahulk11.audioplayer.R.id.bottombar_play:
 
-                if(PlaybackManager.playPauseEvent()){
+                if (PlaybackManager.playPauseEvent()) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
+                    shouldContinue = true;
+                    thread = new Thread(runnable);
+                    thread.start();
                 } else {
                     btn_playpause.Pause();
                     btn_playpausePanel.Pause();
+                    shouldContinue = false;
                 }
 
                 break;
 
             case com.rahulk11.audioplayer.R.id.btn_play:
-                if(PlaybackManager.playPauseEvent()){
+                if (PlaybackManager.playPauseEvent()) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
+                    shouldContinue = true;
+                    thread = new Thread(runnable);
+                    thread.start();
+
                 } else {
                     btn_playpause.Pause();
                     btn_playpausePanel.Pause();
+                    shouldContinue = false;
                 }
                 break;
 
             case com.rahulk11.audioplayer.R.id.btn_forward:
-                    playbackManager.playNext(true);
+                playbackManager.playNext(true);
                 break;
 
             case com.rahulk11.audioplayer.R.id.btn_backward:
@@ -239,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    public void loadSongInfo(HashMap<String, String> songDetail) {
+    public void loadSongInfo(HashMap<String, String> songDetail, boolean seeking) {
         String title = songDetail.get("songTitle");
         String artist = songDetail.get("artistName");
         int milliSecDuration = Integer.parseInt(songDetail.get("songDuration"));
@@ -249,6 +310,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             txt_songartistname.setText(artist);
             txt_songartistname_slidetoptwo.setText(artist);
             txt_timetotal.setText(calculateDuration(milliSecDuration));
+            seekBar.setEnabled(true);
+            seekBar.setProgress(0);
+            seekBar.setMax(Integer.parseInt(songDetail.get(SONG_DURATION)) / 1000);
+            shouldContinue = true;
+            if (seeking) {
+                thread = new Thread(runnable);
+                thread.start();
+            } else {
+                txt_timeprogress.setText("0:00");
+            }
         }
 
         playbackManager.setLastPlayingSongPref(songDetail);
@@ -258,20 +329,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public String calculateDuration(int millisec) {
         long sec = millisec / 1000;
-        return sec != 0 ? String.format("%d:%02d", sec / 60, sec % 60) : "-:--";
+        return sec != 0 ? String.format("%d:%02d", sec / 60, sec % 60) : "0:00";
     }
-
-//     private void updateProgress(HashMap songDetail) {
-////        if (audio_progress != null) {
-////            // When SeekBar Draging Don't Show Progress
-////            if (!isDragingStart) {
-////                // Progress Value comming in point it range 0 to 1
-////                audio_progress.setValue((int) (mSongDetail.audioProgress * 100));
-////            }
-////            String timeString = String.format("%d:%02d", mSongDetail.audioProgressSec / 60, mSongDetail.audioProgressSec % 60);
-////            txt_timeprogress.setText(timeString);
-////        }
-//    }
 
 
     @Override
@@ -289,18 +348,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
+        loadSongInfo(PlaybackManager.getLastPlayingSongPref(), SongService.isPlaying());
         setPlayPauseView(SongService.isPlaying());
-        loadSongInfo(PlaybackManager.getLastPlayingSongPref());
     }
 
     public void setPlayPauseView(boolean isPlaying) {
-        if(btn_playpause != null)
-        if (isPlaying) {
-            btn_playpause.Play();
-            btn_playpausePanel.Play();
-        } else {
-            btn_playpause.Pause();
-            btn_playpausePanel.Pause();
-        }
+        if (btn_playpause != null)
+            if (isPlaying) {
+                btn_playpause.Play();
+                btn_playpausePanel.Play();
+            } else {
+                btn_playpause.Pause();
+                btn_playpausePanel.Pause();
+                shouldContinue = false;
+            }
     }
+
+    boolean shouldContinue = false;
 }

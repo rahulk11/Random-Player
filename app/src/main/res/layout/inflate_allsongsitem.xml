@@ -15,7 +15,7 @@
         android:layout_height="48dp"
         android:layout_marginLeft="8dp"
         android:scaleType="centerCrop"
-        android:src="@android:drawable/ic_lock_silent_mode_off" />
+        android:src="@android:drawable/ic_btn_speak_now" />
 
     <RelativeLayout
         android:layout_width="match_parent"

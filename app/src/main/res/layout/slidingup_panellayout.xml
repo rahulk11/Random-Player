@@ -13,7 +13,7 @@
         abszero:dragView="@+id/dragView"
         abszero:overlay="true"
         abszero:panelHeight="?attr/actionBarSize"
-        abszero:paralaxOffset="0dp"
+        abszero:parallaxOffset="?attr/actionBarSize"
         abszero:shadowHeight="4dp">
 
         <!-- MAIN CONTENT -->

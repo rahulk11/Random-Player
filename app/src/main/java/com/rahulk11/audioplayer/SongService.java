@@ -22,11 +22,13 @@ public class SongService extends Service {
     public final static String ACTION_PAUSE = "PAUSE";
     public final static String ACTION_RESUME = "RESUME";
     public final static String ACTION_STOP = "STOP";
+    public final static String ACTION_SEEK = "SEEK_TO";
     private AudioManager audioManager;
     private PhoneStateListener phoneStateListener;
     private static MediaPlayer player;
     private static Context mContext;
-    String title="", artist = "", album = "";
+    String title = "", artist = "", album = "";
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -69,37 +71,48 @@ public class SongService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
-        if (action.equals(ACTION_PLAY)){
-            String data = intent.getStringExtra("path");
-            title = intent.getStringExtra("songTitle");
-            artist = intent.getStringExtra("songArtist");
-            album = intent.getStringExtra("songAlbum");
-            try {
-                player.reset();
-                player.setDataSource(data);
-                player.prepare();
-                player.start();
-                new NotificationHandler(mContext, title, artist, album, true);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else if (action.equals(ACTION_PAUSE)){
-            if(player.isPlaying()){
-                player.pause();
-                new NotificationHandler(mContext, title, artist, album, false);
-            }
-        } else if (action.equals(ACTION_RESUME)){
-            if(player!=null){
-                player.start();
-                new NotificationHandler(mContext, title, artist, album, true);
-            }
-        }else if (action.equals(ACTION_STOP)){
-            if(player!=null){
-                stopSelf();
-            }
+        switch (action) {
+            case ACTION_PLAY:
+                String data = intent.getStringExtra("path");
+                title = intent.getStringExtra("songTitle");
+                artist = intent.getStringExtra("songArtist");
+                album = intent.getStringExtra("songAlbum");
+                try {
+                    player.reset();
+                    player.setDataSource(data);
+                    player.prepare();
+                    player.start();
+                    new NotificationHandler(mContext, title, artist, album, true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case ACTION_PAUSE:
+                if (player.isPlaying()) {
+                    player.pause();
+                    new NotificationHandler(mContext, title, artist, album, false);
+                }
+                break;
+            case ACTION_RESUME:
+                if (player != null) {
+                    player.start();
+                    new NotificationHandler(mContext, title, artist, album, true);
+                }
+                break;
+            case ACTION_STOP:
+                if (player != null) {
+                    stopSelf();
+                }
+                break;
+            case ACTION_SEEK:
+                int seekTo = intent.getIntExtra("seekTo", 0);
+                if (player != null)
+                    player.seekTo(seekTo);
+                break;
         }
         return Service.START_NOT_STICKY;
     }
@@ -112,9 +125,11 @@ public class SongService extends Service {
     public void onStop() {
 
     }
+
     public void onPause() {
 
     }
+
     @Override
     public void onDestroy() {
         player.stop();
@@ -129,10 +144,17 @@ public class SongService extends Service {
     }
 
 
-    public static boolean isPlaying(){
-        if(player!=null)
+    public static boolean isPlaying() {
+        if (player != null)
             return player.isPlaying();
         return false;
+    }
+
+    public static int getCurrPos(){
+        if(player!=null){
+            return player.getCurrentPosition()/1000;
+        }
+        return 0;
     }
 
 }

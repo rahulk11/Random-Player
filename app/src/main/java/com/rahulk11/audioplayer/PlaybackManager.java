@@ -156,6 +156,13 @@ public class PlaybackManager {
         mContext.startService(i);
     }
 
+    public static void seekTo(int pos){
+        Intent i = new Intent(mContext, SongService.class);
+        i.setAction(SongService.ACTION_SEEK);
+        i.putExtra("seekTo", pos);
+        mContext.startService(i);
+    }
+
     public static void playNext(boolean isShuffle){
 
         int pos = Integer.parseInt(getLastPlayingSongPref().get(MainActivity.SONG_POS));
@@ -164,11 +171,12 @@ public class PlaybackManager {
         } else pos += 1;
         if(pos>-1 && pos<songsList.size()){
             HashMap<String, String> hashMap = songsList.get(pos);
-            ((MainActivity)mContext).loadSongInfo(hashMap);
+            ((MainActivity)mContext).loadSongInfo(hashMap, true);
             playSong(hashMap.get(MainActivity.SONG_PATH),
                     hashMap.get(MainActivity.SONG_TITLE),
                     hashMap.get(MainActivity.ARTIST_NAME),
                     hashMap.get(MainActivity.ALBUM_NAME));
+
         }
     }
 
@@ -181,7 +189,7 @@ public class PlaybackManager {
         } else pos -= 1;
         if(pos>-1 && pos<songsList.size()){
             HashMap<String, String> hashMap = songsList.get(pos);
-            ((MainActivity)mContext).loadSongInfo(hashMap);
+            ((MainActivity)mContext).loadSongInfo(hashMap, true);
             playSong(hashMap.get(MainActivity.SONG_PATH),
                     hashMap.get(MainActivity.SONG_TITLE),
                     hashMap.get(MainActivity.ARTIST_NAME),
