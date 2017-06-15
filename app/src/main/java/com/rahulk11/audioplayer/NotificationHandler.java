@@ -8,11 +8,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.media.AudioManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
+import android.support.v7.graphics.Palette;
 
 import static android.content.Context.AUDIO_SERVICE;
 
@@ -30,7 +30,7 @@ public class NotificationHandler extends Notification {
     private static final int notifID = 54388;
     private static RemoteViews notificationView;
 
-    public NotificationHandler(Context ctx1, String title, String artist, String album, boolean isPlay) {
+    public NotificationHandler(Context ctx1, String title, String artist, String album, byte[] byteCoverArt, boolean isPlay) {
         super();
         ctx = ctx1;
         String ns = Context.NOTIFICATION_SERVICE;
@@ -41,8 +41,24 @@ public class NotificationHandler extends Notification {
         notificationView.setTextViewText(R.id.songTitle, title);
         notificationView.setTextViewText(R.id.songArtist, artist);
         notificationView.setTextViewText(R.id.songAlbum, album);
+        Bitmap bitmap = null;
+        if(byteCoverArt != null) {
+            bitmap = BitmapFactory.decodeByteArray(byteCoverArt, 0, byteCoverArt.length);
+            notificationView.setImageViewBitmap(R.id.albumNotifArt, bitmap);
+            Palette palette = Palette.from(bitmap).generate();
+            int dominantColor = palette.getDominantColor(Color.WHITE);
+            int vibrantColor = palette.getVibrantColor(Color.BLACK);
+            notificationView.setInt(R.id.mainLayout, "setBackgroundColor", dominantColor);
+            notificationView.setInt(R.id.songTitle, "setTextColor", vibrantColor);
+            notificationView.setInt(R.id.songArtist, "setTextColor", vibrantColor);
+            notificationView.setInt(R.id.songAlbum, "setTextColor", vibrantColor);
+        } else {
+            notificationView.setImageViewBitmap(R.id.albumNotifArt, bitmap);
+        }
+
         setListeners();
         playPauseEvent(isPlay);
+
         Intent notificationIntent = new Intent(ctx, MainActivity.class);
         PendingIntent pendingNotificationIntent = PendingIntent.getActivity(ctx, 0, notificationIntent, 0);
 
@@ -70,7 +86,7 @@ public class NotificationHandler extends Notification {
     }
 
     public static class NotifBtnClickReceiver extends BroadcastReceiver {
-
+        private static boolean firstClick = true;
         public void NotifBtnClickReceiver() {
 
         }
@@ -80,7 +96,7 @@ public class NotificationHandler extends Notification {
             String action = intent.getAction();
             switch (action) {
                 case ACTION_PLAY:
-                    PlaybackManager.playPauseEvent(false);
+                    PlaybackManager.playPauseEvent(false, -1);
                     break;
                 case ACTION_NEXT:
                     PlaybackManager.playNext(true);
@@ -91,8 +107,10 @@ public class NotificationHandler extends Notification {
                     break;
                 case Intent.ACTION_HEADSET_PLUG:
                     //noinspection deprecation
-                    if (!((AudioManager)ctx.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn())
-                        PlaybackManager.playPauseEvent(true);
+                    if (!((AudioManager)ctx.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn()&& !firstClick){
+                        PlaybackManager.playPauseEvent(true, -1);
+                        firstClick = false;
+                    }
                     break;
 
             }
@@ -100,7 +118,6 @@ public class NotificationHandler extends Notification {
     }
 
     public void playPauseEvent(boolean isPlaying) {
-        Bitmap bitmap = null;
         if (notificationView != null)
             if (isPlaying) {
                 notificationView.setViewVisibility(R.id.pauseNotifBtn, View.VISIBLE);
