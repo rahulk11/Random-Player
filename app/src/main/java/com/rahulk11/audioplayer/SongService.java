@@ -3,6 +3,7 @@ package com.rahulk11.audioplayer;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.IBinder;
@@ -38,9 +39,11 @@ public class SongService extends Service {
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                PlaybackManager.playNext(true);
+                if (getCurrPos()==getDuration() && getDuration()!=0)
+                    PlaybackManager.playNext(true);
             }
         });
+
         try {
             phoneStateListener = new PhoneStateListener() {
                 @Override
@@ -50,17 +53,23 @@ public class SongService extends Service {
                             player.pause();
                         }
                     } else if (state == TelephonyManager.CALL_STATE_IDLE) {
-
+                        player.start();
                     } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
-
+                        if (player.isPlaying()) {
+                            player.pause();
+                        }
                     }
                     super.onCallStateChanged(state, incomingNumber);
                 }
             };
             TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
             if (mgr != null) {
+                mContext.getSystemService(Context.TELEPHONY_SERVICE);
                 mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
             }
+            IntentFilter receiverFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+            NotificationHandler.NotifBtnClickReceiver receiver = new NotificationHandler.NotifBtnClickReceiver();
+            registerReceiver( receiver, receiverFilter );
         } catch (Exception e) {
             Log.e("tmessages", e.toString());
         }
@@ -150,9 +159,15 @@ public class SongService extends Service {
         return false;
     }
 
-    public static int getCurrPos(){
-        if(player!=null){
-            return player.getCurrentPosition()/1000;
+    public static int getCurrPos() {
+        if (player != null) {
+            return player.getCurrentPosition() / 1000;
+        }
+        return 0;
+    }
+    public static int getDuration() {
+        if (player != null) {
+            return player.getDuration() / 1000;
         }
         return 0;
     }
