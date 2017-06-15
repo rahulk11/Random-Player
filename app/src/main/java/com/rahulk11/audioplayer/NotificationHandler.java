@@ -8,11 +8,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.media.AudioManager;
-import android.util.Log;
+import android.os.Build;
 import android.view.View;
 import android.widget.RemoteViews;
+import android.support.v7.graphics.Palette;
 
 import static android.content.Context.AUDIO_SERVICE;
 
@@ -26,23 +27,40 @@ public class NotificationHandler extends Notification {
     private static NotificationManager mNotificationManager;
     private static final String ACTION_PLAY = "com.rahulk11.audioplayer.ACTION_PLAY";
     private static final String ACTION_NEXT = "com.rahulk11.audioplayer.ACTION_NEXT";
+    private static final String ACTION_PREV = "com.rahulk11.audioplayer.ACTION_PREV";
     private static final String ACTION_CLOSE = "com.rahulk11.audioplayer.ACTION_CLOSE";
+
     private static final int notifID = 54388;
     private static RemoteViews notificationView;
 
-    public NotificationHandler(Context ctx1, String title, String artist, String album, boolean isPlay) {
+    public NotificationHandler(Context ctx1, String title, String artist, String album, byte[] byteCoverArt, boolean isPlay) {
         super();
         ctx = ctx1;
-        String ns = Context.NOTIFICATION_SERVICE;
-
-        mNotificationManager = (NotificationManager) ctx.getSystemService(ns);
-        Notification notification = new Notification(R.drawable.notif, null, System.currentTimeMillis());
-        notificationView = new RemoteViews(ctx.getPackageName(), R.layout.notification_layout);
+        mNotificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+        Notification notification = new Notification(R.drawable.play_button, null, System.currentTimeMillis());
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            notificationView = new RemoteViews(ctx.getPackageName(), R.layout.notif_old_layout);
+        else notificationView = new RemoteViews(ctx.getPackageName(), R.layout.notif_new_layout);
         notificationView.setTextViewText(R.id.songTitle, title);
         notificationView.setTextViewText(R.id.songArtist, artist);
         notificationView.setTextViewText(R.id.songAlbum, album);
+        if (byteCoverArt != null) {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteCoverArt, 0, byteCoverArt.length);
+            if (bitmap != null) {
+                notificationView.setImageViewBitmap(R.id.albumNotifArt, bitmap);
+                Palette palette = Palette.from(bitmap).generate();
+                int dominantColor = palette.getDominantColor(Color.WHITE);
+                int vibrantColor = palette.getVibrantColor(Color.BLACK);
+                notificationView.setInt(R.id.mainLayout, "setBackgroundColor", dominantColor);
+                notificationView.setInt(R.id.songTitle, "setTextColor", vibrantColor);
+                notificationView.setInt(R.id.songArtist, "setTextColor", vibrantColor);
+                notificationView.setInt(R.id.songAlbum, "setTextColor", vibrantColor);
+            }
+        }
+
         setListeners();
         playPauseEvent(isPlay);
+
         Intent notificationIntent = new Intent(ctx, MainActivity.class);
         PendingIntent pendingNotificationIntent = PendingIntent.getActivity(ctx, 0, notificationIntent, 0);
 
@@ -64,12 +82,17 @@ public class NotificationHandler extends Notification {
         PendingIntent pendingNextIntent = PendingIntent.getBroadcast(ctx, 1, nextIntent, 0);
         notificationView.setOnClickPendingIntent(R.id.nextNotifBtn, pendingNextIntent);
 
+        Intent prevIntent = new Intent(ACTION_PREV);
+        PendingIntent pendingPrevIntent = PendingIntent.getBroadcast(ctx, 1, prevIntent, 0);
+        notificationView.setOnClickPendingIntent(R.id.prevNotifBtn, pendingPrevIntent);
+
         Intent closeIntent = new Intent(ACTION_CLOSE);
         PendingIntent pendingCloseIntent = PendingIntent.getBroadcast(ctx, 2, closeIntent, 0);
         notificationView.setOnClickPendingIntent(R.id.closeNotifBtn, pendingCloseIntent);
     }
 
     public static class NotifBtnClickReceiver extends BroadcastReceiver {
+        private static boolean firstClick = true;
 
         public void NotifBtnClickReceiver() {
 
@@ -80,10 +103,13 @@ public class NotificationHandler extends Notification {
             String action = intent.getAction();
             switch (action) {
                 case ACTION_PLAY:
-                    PlaybackManager.playPauseEvent(false);
+                    PlaybackManager.playPauseEvent(false, -1);
                     break;
                 case ACTION_NEXT:
                     PlaybackManager.playNext(true);
+                    break;
+                case ACTION_PREV:
+                    PlaybackManager.playPrev(true);
                     break;
                 case ACTION_CLOSE:
                     mNotificationManager.cancel(notifID);
@@ -91,8 +117,10 @@ public class NotificationHandler extends Notification {
                     break;
                 case Intent.ACTION_HEADSET_PLUG:
                     //noinspection deprecation
-                    if (!((AudioManager)ctx.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn())
-                        PlaybackManager.playPauseEvent(true);
+                    if (!((AudioManager) ctx.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn() && !firstClick) {
+                        PlaybackManager.playPauseEvent(true, -1);
+                        firstClick = false;
+                    }
                     break;
 
             }
@@ -100,7 +128,6 @@ public class NotificationHandler extends Notification {
     }
 
     public void playPauseEvent(boolean isPlaying) {
-        Bitmap bitmap = null;
         if (notificationView != null)
             if (isPlaying) {
                 notificationView.setViewVisibility(R.id.pauseNotifBtn, View.VISIBLE);

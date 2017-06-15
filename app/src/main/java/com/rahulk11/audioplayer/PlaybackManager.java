@@ -120,30 +120,33 @@ public class PlaybackManager {
         ((MainActivity) mContext).setPlayPauseView(false);
     }
 
-    public static boolean playPauseEvent(boolean headphone) {
+    public static boolean playPauseEvent(boolean headphone, int seekProgress) {
         if (headphone || SongService.isPlaying()) {
             ((MainActivity) mContext).setPlayPauseView(false);
             mContext.startService(
                     new Intent(mContext, SongService.class).setAction(SongService.ACTION_PAUSE));
             return false;
         } else {
-            if (!PlaybackManager.getLastPlayingSongPref().get(MainActivity.SONG_ID).equals("")) {
+            HashMap<String, String> hashMap = getLastPlayingSongPref();
+            if (!hashMap.get(MainActivity.SONG_ID).equals("")) {
                 ((MainActivity) mContext).setPlayPauseView(true);
-                mContext.startService(
-                        new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
+                if (seekProgress != 0)
+                    mContext.startService(
+                            new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
+                else playSong(hashMap);
                 return true;
             }
         }
         return false;
     }
 
-    public static void playSong(String path, String title, String artist, String album) {
+    public static void playSong(HashMap<String, String> hashMap) {
         Intent i = new Intent(mContext, SongService.class);
         i.setAction(SongService.ACTION_PLAY);
-        i.putExtra("path", path);
-        i.putExtra("songTitle", title);
-        i.putExtra("songArtist", artist);
-        i.putExtra("songAlbum", album);
+        i.putExtra(MainActivity.SONG_PATH, hashMap.get(MainActivity.SONG_PATH));
+        i.putExtra(MainActivity.SONG_TITLE, hashMap.get(MainActivity.SONG_TITLE));
+        i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
+        i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
         mContext.startService(i);
 
     }
@@ -164,10 +167,7 @@ public class PlaybackManager {
         if (pos > -1 && pos < songsList.size()) {
             HashMap<String, String> hashMap = songsList.get(pos);
             ((MainActivity) mContext).loadSongInfo(hashMap, true);
-            playSong(hashMap.get(MainActivity.SONG_PATH),
-                    hashMap.get(MainActivity.SONG_TITLE),
-                    hashMap.get(MainActivity.ARTIST_NAME),
-                    hashMap.get(MainActivity.ALBUM_NAME));
+            playSong(hashMap);
 
         }
 
@@ -185,10 +185,7 @@ public class PlaybackManager {
         if (pos > -1 && pos < songsList.size()) {
             HashMap<String, String> hashMap = songsList.get(pos);
             ((MainActivity) mContext).loadSongInfo(hashMap, true);
-            playSong(hashMap.get(MainActivity.SONG_PATH),
-                    hashMap.get(MainActivity.SONG_TITLE),
-                    hashMap.get(MainActivity.ARTIST_NAME),
-                    hashMap.get(MainActivity.ALBUM_NAME));
+            playSong(hashMap);
         }
     }
 

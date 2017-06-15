@@ -4,7 +4,10 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -29,7 +32,8 @@ public class SongService extends Service {
     private static MediaPlayer player;
     private static Context mContext;
     String title = "", artist = "", album = "";
-
+    private static NotificationHandler.NotifBtnClickReceiver receiver;
+    private static byte[] byteData;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -39,8 +43,13 @@ public class SongService extends Service {
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                if (getCurrPos()==getDuration() && getDuration()!=0)
+                int duration = mp.getDuration(), currPos=mp.getCurrentPosition();
+                if (currPos>=(duration-1000)  && duration!=0){
+                    mp.reset();
                     PlaybackManager.playNext(true);
+                } else{
+                    PlaybackManager.playPauseEvent(false, currPos);
+                }
             }
         });
 
@@ -68,7 +77,7 @@ public class SongService extends Service {
                 mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
             }
             IntentFilter receiverFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-            NotificationHandler.NotifBtnClickReceiver receiver = new NotificationHandler.NotifBtnClickReceiver();
+            receiver = new NotificationHandler.NotifBtnClickReceiver();
             registerReceiver( receiver, receiverFilter );
         } catch (Exception e) {
             Log.e("tmessages", e.toString());
@@ -86,16 +95,20 @@ public class SongService extends Service {
         String action = intent.getAction();
         switch (action) {
             case ACTION_PLAY:
-                String data = intent.getStringExtra("path");
-                title = intent.getStringExtra("songTitle");
-                artist = intent.getStringExtra("songArtist");
-                album = intent.getStringExtra("songAlbum");
+                String data = intent.getStringExtra(MainActivity.SONG_PATH);
+                title = intent.getStringExtra(MainActivity.SONG_TITLE);
+                artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
+                album = intent.getStringExtra(MainActivity.ALBUM_NAME);
                 try {
                     player.reset();
                     player.setDataSource(data);
                     player.prepare();
                     player.start();
-                    new NotificationHandler(mContext, title, artist, album, true);
+                    MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                    mmr.setDataSource(data);
+
+                    byteData = mmr.getEmbeddedPicture();
+                    new NotificationHandler(mContext, title, artist, album, byteData, true);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -103,13 +116,13 @@ public class SongService extends Service {
             case ACTION_PAUSE:
                 if (player.isPlaying()) {
                     player.pause();
-                    new NotificationHandler(mContext, title, artist, album, false);
+                    new NotificationHandler(mContext, title, artist, album, byteData, false);
                 }
                 break;
             case ACTION_RESUME:
                 if (player != null) {
                     player.start();
-                    new NotificationHandler(mContext, title, artist, album, true);
+                    new NotificationHandler(mContext, title, artist, album, byteData, true);
                 }
                 break;
             case ACTION_STOP:
@@ -144,6 +157,7 @@ public class SongService extends Service {
         player.stop();
         player.release();
         player = null;
+        unregisterReceiver(receiver);
         stopSelf();
     }
 

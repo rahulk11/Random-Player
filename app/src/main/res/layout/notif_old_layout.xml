@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainLayout"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:weightSum="2">
+
+    <ImageView
+        android:id="@+id/albumNotifArt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.40"
+        android:layout_gravity="center_vertical"
+        android:src="@android:drawable/gallery_thumb"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingLeft="3dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/songTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+
+            <TextView
+                android:id="@+id/songAlbum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:maxLines="1"/>
+
+            <TextView
+                android:id="@+id/songArtist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:maxLines="1"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_weight="0.6"
+            android:layout_marginLeft="3dp"
+            android:gravity="center_vertical"
+            android:weightSum="3">
+
+            <ImageButton
+                android:id="@+id/prevNotifBtn"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:padding="3dp"
+                android:visibility="gone"
+                android:scaleType="centerCrop"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_media_previous" />
+
+            <ImageButton
+                android:id="@+id/pauseNotifBtn"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:padding="3dp"
+                android:scaleType="centerCrop"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_media_pause" />
+
+            <ImageButton
+                android:id="@+id/playNotifBtn"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:padding="3dp"
+                android:scaleType="centerCrop"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_media_play"
+                android:visibility="gone"/>
+
+            <ImageButton
+                android:id="@+id/nextNotifBtn"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:padding="3dp"
+                android:layout_marginLeft="3dp"
+                android:scaleType="centerCrop"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_media_next" />
+            <ImageButton
+                android:id="@+id/closeNotifBtn"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:padding="5dp"
+                android:scaleType="centerCrop"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_menu_close_clear_cancel" />
+
+        </LinearLayout>
+
+</LinearLayout>

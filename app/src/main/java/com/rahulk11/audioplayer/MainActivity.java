@@ -187,10 +187,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 HashMap<String, String> hashMap = PlaybackManager.songsList.get(position);
                 loadSongInfo(hashMap, true);
-                PlaybackManager.playSong(hashMap.get(MainActivity.SONG_PATH),
-                        hashMap.get(MainActivity.SONG_TITLE),
-                        hashMap.get(MainActivity.ARTIST_NAME),
-                        hashMap.get(MainActivity.ALBUM_NAME));
+                PlaybackManager.playSong(hashMap);
                 btn_playpause.Play();
                 btn_playpausePanel.Play();
             }
@@ -257,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case com.rahulk11.audioplayer.R.id.bottombar_play:
 
-                if (PlaybackManager.playPauseEvent(false)) {
+                if (PlaybackManager.playPauseEvent(false, seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                     shouldContinue = true;
@@ -272,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case com.rahulk11.audioplayer.R.id.btn_play:
-                if (PlaybackManager.playPauseEvent(false)) {
+                if (PlaybackManager.playPauseEvent(false, seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                     shouldContinue = true;
@@ -301,6 +298,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void loadSongInfo(HashMap<String, String> songDetail, boolean seeking) {
+        playbackManager.setLastPlayingSongPref(songDetail);
         String title = songDetail.get("songTitle");
         String artist = songDetail.get("artistName");
         int milliSecDuration = Integer.parseInt(songDetail.get("songDuration"));
@@ -311,8 +309,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             txt_songartistname_slidetoptwo.setText(artist);
             txt_timetotal.setText(calculateDuration(milliSecDuration));
             seekBar.setEnabled(true);
+            seekBar.setMax((Integer.parseInt(songDetail.get(SONG_DURATION)) / 1000));
             seekBar.setProgress(0);
-            seekBar.setMax(Integer.parseInt(songDetail.get(SONG_DURATION)) / 1000);
             shouldContinue = true;
             txt_timeprogress.setText("0:00");
             if (seeking) {
@@ -320,8 +318,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 thread.start();
             }
         }
-
-        playbackManager.setLastPlayingSongPref(songDetail);
 //        updateProgress(songsManager);
     }
 
@@ -347,8 +343,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-        loadSongInfo(PlaybackManager.getLastPlayingSongPref(), SongService.isPlaying());
-        setPlayPauseView(SongService.isPlaying());
+        try{
+            loadSongInfo(PlaybackManager.getLastPlayingSongPref(), SongService.isPlaying());
+            setPlayPauseView(SongService.isPlaying());
+        } catch(NullPointerException e){
+            e.printStackTrace();
+        }
     }
 
     public void setPlayPauseView(boolean isPlaying) {
