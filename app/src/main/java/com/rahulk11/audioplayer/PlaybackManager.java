@@ -174,8 +174,6 @@ public class PlaybackManager {
             ((MainActivity) mContext).loadSongInfo(hashMap, true);
             playSong(hashMap);
         }
-
-
     }
 
     public static void playPrev(boolean isShuffle) {
@@ -184,7 +182,8 @@ public class PlaybackManager {
         if (isShuffle && shufflePosList.contains(pos)) {
             int index = shufflePosList.indexOf(pos);
             if (index != 0)
-                pos = shufflePosList.get(index - 1);
+                pos = shufflePosList.get(--index);
+            else pos = shufflePos();
         } else pos -= 1;
         if (pos > -1 && pos < songsList.size()) {
             HashMap<String, String> hashMap = songsList.get(pos);
