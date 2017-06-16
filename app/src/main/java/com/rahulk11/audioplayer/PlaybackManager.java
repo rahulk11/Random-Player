@@ -120,8 +120,8 @@ public class PlaybackManager {
         ((MainActivity) mContext).setPlayPauseView(false);
     }
 
-    public static boolean playPauseEvent(boolean headphone, int seekProgress) {
-        if (headphone || SongService.isPlaying()) {
+    public static boolean playPauseEvent(boolean headphone, boolean isPlaying, int seekProgress) {
+        if (headphone || isPlaying) {
             ((MainActivity) mContext).setPlayPauseView(false);
             mContext.startService(
                     new Intent(mContext, SongService.class).setAction(SongService.ACTION_PAUSE));
@@ -130,9 +130,9 @@ public class PlaybackManager {
             HashMap<String, String> hashMap = getLastPlayingSongPref();
             if (!hashMap.get(MainActivity.SONG_ID).equals("")) {
                 ((MainActivity) mContext).setPlayPauseView(true);
-                if (seekProgress != 0)
+                if (seekProgress != -1)
                     mContext.startService(
-                            new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
+                            new Intent(mContext, SongService.class).setAction(SongService.ACTION_SEEK).putExtra("seekTo", seekProgress));
                 else playSong(hashMap);
                 return true;
             }
@@ -162,13 +162,17 @@ public class PlaybackManager {
         MainActivity.shouldContinue = false;
         int pos = Integer.parseInt(getLastPlayingSongPref().get(MainActivity.SONG_POS));
         if (isShuffle) {
-            pos = shufflePos(0);
+            if (shufflePosList.contains(pos)) {
+                int index = shufflePosList.indexOf(pos);
+                if (index < (shufflePosList.size() - 1))
+                    pos = shufflePosList.get(++index);
+                else pos = shufflePos();
+            } else pos = shufflePos();
         } else pos += 1;
         if (pos > -1 && pos < songsList.size()) {
             HashMap<String, String> hashMap = songsList.get(pos);
             ((MainActivity) mContext).loadSongInfo(hashMap, true);
             playSong(hashMap);
-
         }
 
 
@@ -204,28 +208,25 @@ public class PlaybackManager {
 
     public static HashMap<String, String> getLastPlayingSongPref() {
         HashMap<String, String> hashMap = new HashMap<>();
-        hashMap.put(MainActivity.SONG_TITLE, sharedPref.getString(MainActivity.SONG_TITLE, ""));
-        hashMap.put(MainActivity.SONG_ID, sharedPref.getString(MainActivity.SONG_ID, ""));
-        hashMap.put(MainActivity.ARTIST_NAME, sharedPref.getString(MainActivity.ARTIST_NAME, ""));
-        hashMap.put(MainActivity.ALBUM_NAME, sharedPref.getString(MainActivity.ALBUM_NAME, ""));
-        hashMap.put(MainActivity.SONG_DURATION, sharedPref.getString(MainActivity.SONG_DURATION, "" + 0));
-        hashMap.put(MainActivity.SONG_PATH, sharedPref.getString(MainActivity.SONG_PATH, ""));
-        hashMap.put(MainActivity.SONG_POS, sharedPref.getString(MainActivity.SONG_POS, -1 + ""));
+        if (sharedPref != null) {
+            hashMap.put(MainActivity.SONG_TITLE, sharedPref.getString(MainActivity.SONG_TITLE, ""));
+            hashMap.put(MainActivity.SONG_ID, sharedPref.getString(MainActivity.SONG_ID, ""));
+            hashMap.put(MainActivity.ARTIST_NAME, sharedPref.getString(MainActivity.ARTIST_NAME, ""));
+            hashMap.put(MainActivity.ALBUM_NAME, sharedPref.getString(MainActivity.ALBUM_NAME, ""));
+            hashMap.put(MainActivity.SONG_DURATION, sharedPref.getString(MainActivity.SONG_DURATION, "" + 0));
+            hashMap.put(MainActivity.SONG_PATH, sharedPref.getString(MainActivity.SONG_PATH, ""));
+            hashMap.put(MainActivity.SONG_POS, sharedPref.getString(MainActivity.SONG_POS, -1 + ""));
+        }
         return hashMap;
     }
 
-    private static int shufflePos(int i) {
+    private static int shufflePos() {
         int min = 0, max = songsList.size();
         int range = (max - min) + 1;
         int shuffledPos = (int) (Math.random() * range) + min;
-        if (shufflePosList.contains(shuffledPos) && i < 3) {
-            shuffledPos = shufflePos(++i);
-        } else if (i >= 3) {
-//            shufflePosList = new ArrayList<>();
-//            shufflePosList.add(shuffledPos);
-            return shuffledPos;
+        if(!shufflePosList.contains(shuffledPos)) {
+            shufflePosList.add(shuffledPos);
         }
-        shufflePosList.add(shuffledPos);
         return shuffledPos;
     }
 

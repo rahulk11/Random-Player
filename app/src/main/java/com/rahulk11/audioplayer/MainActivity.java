@@ -197,10 +197,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    PlaybackManager.seekTo(progress * 1000);
+                    PlaybackManager.seekTo(progress);
                     seekBar.setProgress(progress);
                     shouldContinue = true;
-                    txt_timeprogress.setText(calculateDuration(progress * 1000));
+                    txt_timeprogress.setText(calculateDuration(progress));
                 }
             }
 
@@ -221,12 +221,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void run() {
             int currSeekPos = SongService.getCurrPos();
             int max = seekBar.getMax();
-
+            seekBar.setProgress(currSeekPos);
             while (currSeekPos < max && shouldContinue) {
                 try {
                     Thread.sleep(1000);
                     currSeekPos = SongService.getCurrPos();
-                    final int finalCurrSeekPos = currSeekPos * 1000;
+                    final int finalCurrSeekPos = currSeekPos;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -253,8 +253,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (v.getId()) {
             case com.rahulk11.audioplayer.R.id.bottombar_play:
-
-                if (PlaybackManager.playPauseEvent(false, seekBar.getProgress())) {
+                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                     shouldContinue = true;
@@ -269,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case com.rahulk11.audioplayer.R.id.btn_play:
-                if (PlaybackManager.playPauseEvent(false, seekBar.getProgress())) {
+                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                     shouldContinue = true;
@@ -309,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             txt_songartistname_slidetoptwo.setText(artist);
             txt_timetotal.setText(calculateDuration(milliSecDuration));
             seekBar.setEnabled(true);
-            seekBar.setMax((Integer.parseInt(songDetail.get(SONG_DURATION)) / 1000));
+            seekBar.setMax((Integer.parseInt(songDetail.get(SONG_DURATION))));
             seekBar.setProgress(0);
             shouldContinue = true;
             txt_timeprogress.setText("0:00");
@@ -349,6 +348,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch(NullPointerException e){
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(mLayout.getPanelState()==SlidingUpPanelLayout.PanelState.EXPANDED){
+            mLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+        }else super.onBackPressed();
+
     }
 
     public void setPlayPauseView(boolean isPlaying) {

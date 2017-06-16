@@ -45,10 +45,9 @@ public class SongService extends Service {
             public void onCompletion(MediaPlayer mp) {
                 int duration = mp.getDuration(), currPos=mp.getCurrentPosition();
                 if (currPos>=(duration-1000)  && duration!=0){
-                    mp.reset();
                     PlaybackManager.playNext(true);
                 } else{
-                    PlaybackManager.playPauseEvent(false, currPos);
+                    PlaybackManager.playPauseEvent(false, false, currPos);
                 }
             }
         });
@@ -132,8 +131,11 @@ public class SongService extends Service {
                 break;
             case ACTION_SEEK:
                 int seekTo = intent.getIntExtra("seekTo", 0);
-                if (player != null)
+                if (player != null){
                     player.seekTo(seekTo);
+                    player.start();
+                }
+                new NotificationHandler(mContext, title, artist, album, byteData, true);
                 break;
         }
         return Service.START_NOT_STICKY;
@@ -158,6 +160,7 @@ public class SongService extends Service {
         player.release();
         player = null;
         unregisterReceiver(receiver);
+        NotificationHandler.onServiceDestroy();
         stopSelf();
     }
 
@@ -175,13 +178,13 @@ public class SongService extends Service {
 
     public static int getCurrPos() {
         if (player != null) {
-            return player.getCurrentPosition() / 1000;
+            return player.getCurrentPosition();
         }
         return 0;
     }
     public static int getDuration() {
         if (player != null) {
-            return player.getDuration() / 1000;
+            return player.getDuration();
         }
         return 0;
     }

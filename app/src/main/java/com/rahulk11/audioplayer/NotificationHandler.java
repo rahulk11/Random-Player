@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.support.v7.graphics.Palette;
@@ -33,6 +34,7 @@ public class NotificationHandler extends Notification {
     private static final int notifID = 54388;
     private static RemoteViews notificationView;
 
+    @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
     public NotificationHandler(Context ctx1, String title, String artist, String album, byte[] byteCoverArt, boolean isPlay) {
         super();
         ctx = ctx1;
@@ -103,7 +105,7 @@ public class NotificationHandler extends Notification {
             String action = intent.getAction();
             switch (action) {
                 case ACTION_PLAY:
-                    PlaybackManager.playPauseEvent(false, -1);
+                    PlaybackManager.playPauseEvent(false, SongService.isPlaying(), SongService.getCurrPos());
                     break;
                 case ACTION_NEXT:
                     PlaybackManager.playNext(true);
@@ -112,15 +114,16 @@ public class NotificationHandler extends Notification {
                     PlaybackManager.playPrev(true);
                     break;
                 case ACTION_CLOSE:
-                    mNotificationManager.cancel(notifID);
+                    onServiceDestroy();
                     PlaybackManager.stopService();
                     break;
                 case Intent.ACTION_HEADSET_PLUG:
                     //noinspection deprecation
-                    if (!((AudioManager) ctx.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn() && !firstClick) {
-                        PlaybackManager.playPauseEvent(true, -1);
-                        firstClick = false;
-                    }
+                    if (ctx != null)
+                        if (!((AudioManager) ctx.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn() && !firstClick) {
+                            PlaybackManager.playPauseEvent(true, SongService.isPlaying(), SongService.getCurrPos());
+                            firstClick = false;
+                        }
                     break;
 
             }
@@ -136,6 +139,10 @@ public class NotificationHandler extends Notification {
                 notificationView.setViewVisibility(R.id.playNotifBtn, View.VISIBLE);
                 notificationView.setViewVisibility(R.id.pauseNotifBtn, View.GONE);
             }
+    }
+
+    public static void onServiceDestroy() {
+        mNotificationManager.cancel(notifID);
     }
 
 }
