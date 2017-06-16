@@ -44,7 +44,7 @@ public class SongService extends Service {
             @Override
             public void onCompletion(MediaPlayer mp) {
                 int duration = mp.getDuration(), currPos=mp.getCurrentPosition();
-                if (currPos>=(duration-1000)  && duration!=0){
+                if ((currPos>=(duration)||currPos==0)  && duration!=0){
                     PlaybackManager.playNext(true);
                 } else{
                     PlaybackManager.playPauseEvent(false, false, currPos);
@@ -105,7 +105,6 @@ public class SongService extends Service {
                     player.start();
                     MediaMetadataRetriever mmr = new MediaMetadataRetriever();
                     mmr.setDataSource(data);
-
                     byteData = mmr.getEmbeddedPicture();
                     new NotificationHandler(mContext, title, artist, album, byteData, true);
                 } catch (IOException e) {
@@ -131,7 +130,20 @@ public class SongService extends Service {
                 break;
             case ACTION_SEEK:
                 int seekTo = intent.getIntExtra("seekTo", 0);
+                String seekData = intent.getStringExtra(MainActivity.SONG_PATH);
+                title = intent.getStringExtra(MainActivity.SONG_TITLE);
+                artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
+                album = intent.getStringExtra(MainActivity.ALBUM_NAME);
                 if (player != null){
+                    try {
+                        if(!android.text.TextUtils.isEmpty(seekData)){
+                            player.reset();
+                            player.setDataSource(seekData);
+                            player.prepare();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     player.seekTo(seekTo);
                     player.start();
                 }

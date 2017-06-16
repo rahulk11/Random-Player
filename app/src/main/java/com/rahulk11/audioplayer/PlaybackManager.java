@@ -131,8 +131,7 @@ public class PlaybackManager {
             if (!hashMap.get(MainActivity.SONG_ID).equals("")) {
                 ((MainActivity) mContext).setPlayPauseView(true);
                 if (seekProgress != -1)
-                    mContext.startService(
-                            new Intent(mContext, SongService.class).setAction(SongService.ACTION_SEEK).putExtra("seekTo", seekProgress));
+                    seekTo(seekProgress, hashMap);
                 else playSong(hashMap);
                 return true;
             }
@@ -148,13 +147,22 @@ public class PlaybackManager {
         i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
         i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
         mContext.startService(i);
-
+        if(shufflePosList.contains(hashMap.get(MainActivity.SONG_POS))){
+            shufflePosList.add(Integer.parseInt(hashMap.get(MainActivity.SONG_POS)));
+        }
+        ((MainActivity) mContext).setPlayPauseView(true);
     }
 
-    public static void seekTo(int pos) {
+    public static void seekTo(int progress, HashMap<String, String> hashMap) {
         Intent i = new Intent(mContext, SongService.class);
+        if(hashMap!=null){
+            i.putExtra(MainActivity.SONG_PATH, hashMap.get(MainActivity.SONG_PATH));
+            i.putExtra(MainActivity.SONG_TITLE, hashMap.get(MainActivity.SONG_TITLE));
+            i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
+            i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
+        }
         i.setAction(SongService.ACTION_SEEK);
-        i.putExtra("seekTo", pos);
+        i.putExtra("seekTo", progress);
         mContext.startService(i);
     }
 
@@ -223,9 +231,6 @@ public class PlaybackManager {
         int min = 0, max = songsList.size();
         int range = (max - min) + 1;
         int shuffledPos = (int) (Math.random() * range) + min;
-        if(!shufflePosList.contains(shuffledPos)) {
-            shufflePosList.add(shuffledPos);
-        }
         return shuffledPos;
     }
 

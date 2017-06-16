@@ -64,6 +64,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         init();
         toolbarStatusBar();
         initListeners();
+        initPlaybackManager();
+    }
+
+    private void initPlaybackManager() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             playbackManager = new PlaybackManager(mContext);
         } else {
@@ -197,10 +201,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    PlaybackManager.seekTo(progress);
+                    shouldContinue = false;
+                    PlaybackManager.seekTo(progress, null);
                     seekBar.setProgress(progress);
-                    shouldContinue = true;
                     txt_timeprogress.setText(calculateDuration(progress));
+                    shouldContinue = true;
+                    thread = new Thread(runnable);
+                    thread.start();
                 }
             }
 
@@ -342,28 +349,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-        try{
+        if (playbackManager == null)
+            initPlaybackManager();
+        try {
             loadSongInfo(PlaybackManager.getLastPlayingSongPref(), SongService.isPlaying());
             setPlayPauseView(SongService.isPlaying());
-        } catch(NullPointerException e){
+        } catch (NullPointerException e) {
             e.printStackTrace();
         }
     }
 
     @Override
     public void onBackPressed() {
-        if(mLayout.getPanelState()==SlidingUpPanelLayout.PanelState.EXPANDED){
+        if (mLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
             mLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-        }else super.onBackPressed();
+        } else super.onBackPressed();
 
     }
 
     public void setPlayPauseView(boolean isPlaying) {
+        int currPos = SongService.getCurrPos();
+        String text = calculateDuration(currPos);
+        seekBar.setProgress(currPos);
+        txt_timeprogress.setText(text);
         if (btn_playpause != null)
             if (isPlaying) {
                 btn_playpause.Play();
                 btn_playpausePanel.Play();
                 shouldContinue = true;
+                thread = new Thread(runnable);
+                thread.start();
             } else {
                 btn_playpause.Pause();
                 btn_playpausePanel.Pause();
