@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.telephony.PhoneStateListener;
@@ -16,6 +17,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 
 /**
  * Created by rahul on 6/9/2017.
@@ -33,20 +35,23 @@ public class SongService extends Service {
     private static Context mContext;
     String title = "", artist = "", album = "";
     private static NotificationHandler.NotifBtnClickReceiver receiver;
+    private NotificationHandler notificationHandler;
     private static byte[] byteData;
     @Override
     public void onCreate() {
         super.onCreate();
         mContext = getApplicationContext();
+        notificationHandler = new NotificationHandler(mContext);
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         player = new MediaPlayer();
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
                 int duration = mp.getDuration(), currPos=mp.getCurrentPosition();
-                if ((currPos>=(duration)||currPos==0)  && duration!=0){
+                if(!mp.isPlaying()&& currPos>=(duration-3000)  && duration!=0){
                     PlaybackManager.playNext(true);
-                } else{
+                }
+                else{
                     PlaybackManager.playPauseEvent(false, false, currPos);
                 }
             }
@@ -106,7 +111,7 @@ public class SongService extends Service {
                     MediaMetadataRetriever mmr = new MediaMetadataRetriever();
                     mmr.setDataSource(data);
                     byteData = mmr.getEmbeddedPicture();
-                    new NotificationHandler(mContext, title, artist, album, byteData, true);
+                    notificationHandler.updateNotification(byteData, title, artist, album, true);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -114,13 +119,13 @@ public class SongService extends Service {
             case ACTION_PAUSE:
                 if (player.isPlaying()) {
                     player.pause();
-                    new NotificationHandler(mContext, title, artist, album, byteData, false);
+                    notificationHandler.updateNotification(byteData, title, artist, album, false);
                 }
                 break;
             case ACTION_RESUME:
                 if (player != null) {
                     player.start();
-                    new NotificationHandler(mContext, title, artist, album, byteData, true);
+                    notificationHandler.updateNotification(byteData, title, artist, album, true);
                 }
                 break;
             case ACTION_STOP:
@@ -129,7 +134,7 @@ public class SongService extends Service {
                 }
                 break;
             case ACTION_SEEK:
-                int seekTo = intent.getIntExtra("seekTo", 0);
+                final int seekTo = intent.getIntExtra("seekTo", 0);
                 String seekData = intent.getStringExtra(MainActivity.SONG_PATH);
                 title = intent.getStringExtra(MainActivity.SONG_TITLE);
                 artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
@@ -140,14 +145,21 @@ public class SongService extends Service {
                             player.reset();
                             player.setDataSource(seekData);
                             player.prepare();
+                            player.start();
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     player.seekTo(seekTo);
-                    player.start();
+//                    new Handler().postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            player.seekTo(seekTo);
+//                        }
+//                    }, 2000);
+
                 }
-                new NotificationHandler(mContext, title, artist, album, byteData, true);
+                notificationHandler.updateNotification(byteData, title, artist, album, true);
                 break;
         }
         return Service.START_NOT_STICKY;

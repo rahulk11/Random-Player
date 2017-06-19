@@ -69,11 +69,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initPlaybackManager() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            playbackManager = new PlaybackManager(mContext);
+            playbackManager = PlaybackManager.getInstance(mContext);
         } else {
-            requestPermissions(new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-            }, 0);
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+                requestPermissions(new String[]{
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                }, 0);
+            else playbackManager = PlaybackManager.getInstance(mContext);
         }
     }
 
@@ -202,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
                     shouldContinue = false;
-                    PlaybackManager.seekTo(progress, null);
+                    PlaybackManager.seekTo(progress, PlaybackManager.getLastPlayingSongPref());
                     seekBar.setProgress(progress);
                     txt_timeprogress.setText(calculateDuration(progress));
                     shouldContinue = true;
@@ -304,7 +306,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void loadSongInfo(HashMap<String, String> songDetail, boolean seeking) {
-        playbackManager.setLastPlayingSongPref(songDetail);
         String title = songDetail.get("songTitle");
         String artist = songDetail.get("artistName");
         int milliSecDuration = Integer.parseInt(songDetail.get("songDuration"));
@@ -336,9 +337,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-            playbackManager = new PlaybackManager(mContext);
+        switch (requestCode) {
+            case 0:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    playbackManager = PlaybackManager.getInstance(mContext);
+                break;
+        }
     }
 
     @Override
@@ -349,14 +353,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-        if (playbackManager == null)
-            initPlaybackManager();
-        try {
+        if (playbackManager != null) {
             loadSongInfo(PlaybackManager.getLastPlayingSongPref(), SongService.isPlaying());
             setPlayPauseView(SongService.isPlaying());
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
+        } else initPlaybackManager();
     }
 
     @Override

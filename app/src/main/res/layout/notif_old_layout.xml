@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/mainLayout"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:weightSum="2">
+    android:weightSum="2"
+    android:background="@android:color/transparent">
 
+    <ImageView
+        android:id="@+id/ivBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"/>
+
+    <LinearLayout
+        android:id="@+id/mainLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:weightSum="2"
+        android:background="@android:color/transparent">
     <ImageView
         android:id="@+id/albumNotifArt"
         android:layout_width="0dp"
@@ -111,4 +125,6 @@
 
         </LinearLayout>
 
-</LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

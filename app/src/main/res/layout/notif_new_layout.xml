@@ -1,119 +1,133 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/mainLayout"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:weightSum="2">
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/ivBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"/>
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:id="@+id/mainLayout"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_weight="1.60">
+        android:orientation="horizontal"
+        android:weightSum="2">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:paddingLeft="3dp"
-            android:gravity="center_vertical">
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.60"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/songTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:paddingLeft="3dp">
 
-            <TextView
-                android:id="@+id/songAlbum"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:maxLines="1"/>
+                <TextView
+                    android:id="@+id/songTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
 
-            <TextView
-                android:id="@+id/songArtist"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:maxLines="1"/>
+                <TextView
+                    android:id="@+id/songAlbum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:id="@+id/songArtist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <ImageButton
+                    android:id="@+id/prevNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="0.4"
+                    android:background="@android:color/transparent"
+                    android:padding="3dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_media_previous"/>
+
+                <ImageButton
+                    android:id="@+id/pauseNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="3dp"
+                    android:layout_weight="0.4"
+                    android:background="@android:color/transparent"
+                    android:padding="3dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_media_pause"/>
+
+                <ImageButton
+                    android:id="@+id/playNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="3dp"
+                    android:layout_weight="0.4"
+                    android:background="@android:color/transparent"
+                    android:padding="3dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_media_play"
+                    android:visibility="gone"/>
+
+                <ImageButton
+                    android:id="@+id/nextNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="3dp"
+                    android:layout_weight="0.4"
+                    android:background="@android:color/transparent"
+                    android:padding="3dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_media_next"/>
+
+                <ImageButton
+                    android:id="@+id/closeNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="0.3"
+                    android:background="@android:color/transparent"
+                    android:padding="5dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"/>
+
+            </LinearLayout>
+
         </LinearLayout>
 
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:weightSum="3">
-
-            <ImageButton
-                android:id="@+id/prevNotifBtn"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="0.4"
-                android:padding="3dp"
-                android:scaleType="centerCrop"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_media_previous" />
-
-            <ImageButton
-                android:id="@+id/pauseNotifBtn"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="0.4"
-                android:padding="3dp"
-                android:layout_marginLeft="3dp"
-                android:scaleType="centerCrop"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_media_pause" />
-
-            <ImageButton
-                android:id="@+id/playNotifBtn"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="0.4"
-                android:padding="3dp"
-                android:layout_marginLeft="3dp"
-                android:scaleType="centerCrop"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_media_play"
-                android:visibility="gone"/>
-
-            <ImageButton
-                android:id="@+id/nextNotifBtn"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="0.4"
-                android:padding="3dp"
-                android:layout_marginLeft="3dp"
-                android:scaleType="centerCrop"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_media_next" />
-            <ImageButton
-                android:id="@+id/closeNotifBtn"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="0.3"
-                android:padding="5dp"
-                android:scaleType="centerCrop"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_close_clear_cancel" />
-
-        </LinearLayout>
+        <ImageView
+            android:id="@+id/albumNotifArt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="5dp"
+            android:layout_weight="0.40"/>
 
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/albumNotifArt"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.40"
-        android:layout_gravity="center_vertical"
-        android:layout_marginRight="5dp"/>
-
-</LinearLayout>
+</FrameLayout>

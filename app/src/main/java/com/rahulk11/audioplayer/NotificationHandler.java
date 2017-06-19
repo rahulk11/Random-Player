@@ -8,10 +8,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Shader;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RectShape;
 import android.media.AudioManager;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.support.v7.graphics.Palette;
@@ -33,44 +40,35 @@ public class NotificationHandler extends Notification {
 
     private static final int notifID = 54388;
     private static RemoteViews notificationView;
+    private Notification notification;
+    private Canvas canvas;
+    private Bitmap gradientBitmap;
+    private float dp, dpi;
 
     @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
-    public NotificationHandler(Context ctx1, String title, String artist, String album, byte[] byteCoverArt, boolean isPlay) {
+    public NotificationHandler(Context ctx1) {
         super();
         ctx = ctx1;
         mNotificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification notification = new Notification(R.drawable.play_button, null, System.currentTimeMillis());
+        notification = new Notification(R.drawable.play_button, null, System.currentTimeMillis());
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             notificationView = new RemoteViews(ctx.getPackageName(), R.layout.notif_old_layout);
         else notificationView = new RemoteViews(ctx.getPackageName(), R.layout.notif_new_layout);
-        notificationView.setTextViewText(R.id.songTitle, title);
-        notificationView.setTextViewText(R.id.songArtist, artist);
-        notificationView.setTextViewText(R.id.songAlbum, album);
-        if (byteCoverArt != null) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(byteCoverArt, 0, byteCoverArt.length);
-            if (bitmap != null) {
-                notificationView.setImageViewBitmap(R.id.albumNotifArt, bitmap);
-                Palette palette = Palette.from(bitmap).generate();
-                int dominantColor = palette.getDominantColor(Color.WHITE);
-                int vibrantColor = palette.getVibrantColor(Color.BLACK);
-                notificationView.setInt(R.id.mainLayout, "setBackgroundColor", dominantColor);
-                notificationView.setInt(R.id.songTitle, "setTextColor", vibrantColor);
-                notificationView.setInt(R.id.songArtist, "setTextColor", vibrantColor);
-                notificationView.setInt(R.id.songAlbum, "setTextColor", vibrantColor);
-            }
-        }
 
         setListeners();
-        playPauseEvent(isPlay);
+
 
         Intent notificationIntent = new Intent(ctx, MainActivity.class);
         PendingIntent pendingNotificationIntent = PendingIntent.getActivity(ctx, 0, notificationIntent, 0);
 
-        notification.contentView = notificationView;
         notification.contentIntent = pendingNotificationIntent;
         notification.flags |= Notification.FLAG_NO_CLEAR;
 
-        mNotificationManager.notify(notifID, notification);
+        dpi = ctx.getResources().getDisplayMetrics().xdpi;
+        dp = ctx.getResources().getDisplayMetrics().density;
+
+        gradientBitmap = Bitmap.createBitmap(Math.round(288 * dp), Math.round(72 * dp), Bitmap.Config.ARGB_8888);
+        canvas = new Canvas(gradientBitmap);
     }
 
     public void setListeners() {
@@ -94,7 +92,7 @@ public class NotificationHandler extends Notification {
     }
 
     public static class NotifBtnClickReceiver extends BroadcastReceiver {
-        private static boolean firstClick = true;
+        private boolean firstClick = true;
 
         public void NotifBtnClickReceiver() {
 
@@ -143,6 +141,46 @@ public class NotificationHandler extends Notification {
 
     public static void onServiceDestroy() {
         mNotificationManager.cancel(notifID);
+    }
+
+    public void updateNotification(final byte[] byteCoverArt, final String title, final String artist, final String album, final boolean isPlay) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                playPauseEvent(isPlay);
+                if (byteCoverArt != null) {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(byteCoverArt, 0, byteCoverArt.length);
+                    notificationView.setImageViewBitmap(R.id.albumNotifArt, bitmap);
+                    if (bitmap != null) {
+                        Palette palette = Palette.from(bitmap).generate();
+                        int dominantColor = palette.getDominantColor(Color.WHITE);
+                        int vibrantColor = palette.getVibrantColor(Color.GRAY);
+                        int darkVibrantColor = palette.getDarkVibrantColor(Color.DKGRAY);
+//                        int lightVibrantColor = palette.getLightVibrantColor(Color.LTGRAY);
+                        int[] colors = new int[]{vibrantColor, dominantColor};
+                        notificationView.setInt(R.id.songTitle, "setTextColor", darkVibrantColor);
+                        notificationView.setInt(R.id.songArtist, "setTextColor", darkVibrantColor);
+                        notificationView.setInt(R.id.songAlbum, "setTextColor", darkVibrantColor);
+
+                        GradientDrawable gradientDrawable = new GradientDrawable(
+                                GradientDrawable.Orientation.LEFT_RIGHT, colors);
+
+                        gradientDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                        gradientDrawable.setCornerRadius(5 * (dpi / 160));
+                        gradientDrawable.draw(canvas);
+
+                        notificationView.setImageViewBitmap(R.id.ivBackground, gradientBitmap);
+                    }
+                }
+                notificationView.setTextViewText(R.id.songTitle, title);
+                notificationView.setTextViewText(R.id.songArtist, artist);
+                notificationView.setTextViewText(R.id.songAlbum, album);
+
+                notification.contentView = notificationView;
+                mNotificationManager.notify(notifID, notification);
+            }
+        }).start();
+
     }
 
 }
