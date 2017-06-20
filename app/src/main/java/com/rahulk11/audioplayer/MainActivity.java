@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
                     shouldContinue = false;
-                    PlaybackManager.seekTo(progress, PlaybackManager.getLastPlayingSongPref());
+                    PlaybackManager.playPauseEvent(false, false, progress);
                     seekBar.setProgress(progress);
                     txt_timeprogress.setText(calculateDuration(progress));
                     shouldContinue = true;
@@ -354,7 +354,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
         if (playbackManager != null) {
-            loadSongInfo(PlaybackManager.getLastPlayingSongPref(), SongService.isPlaying());
+            loadSongInfo(PlaybackManager.getPlayingSongPref(), SongService.isPlaying());
             setPlayPauseView(SongService.isPlaying());
         } else initPlaybackManager();
     }
