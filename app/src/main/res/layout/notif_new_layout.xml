@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:weightSum="2">
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.5">
+
+        <ImageView
+            android:id="@+id/ivBackground"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:paddingLeft="5dp"
+                android:paddingTop="3dp">
+
+                <TextView
+                    android:id="@+id/songTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textSize="15sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/songAlbum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:id="@+id/songArtist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <ImageButton
+                    android:id="@+id/prevNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="0.4"
+                    android:background="@android:color/transparent"
+                    android:padding="3dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_media_previous"/>
+
+                <ImageButton
+                    android:id="@+id/pauseNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_marginLeft="3dp"
+                    android:layout_weight="0.4"
+                    android:background="@android:color/transparent"
+                    android:padding="3dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_media_pause"/>
+
+                <ImageButton
+                    android:id="@+id/playNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_marginLeft="3dp"
+                    android:layout_weight="0.4"
+                    android:background="@android:color/transparent"
+                    android:padding="3dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_media_play"
+                    android:visibility="gone"/>
+
+                <ImageButton
+                    android:id="@+id/nextNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_marginLeft="3dp"
+                    android:layout_weight="0.4"
+                    android:background="@android:color/transparent"
+                    android:padding="3dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_media_next"/>
+
+                <ImageButton
+                    android:id="@+id/closeNotifBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="0.3"
+                    android:background="@android:color/transparent"
+                    android:padding="5dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"/>
+
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/fl_albumArt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.50">
+
+        <ImageView
+            android:id="@+id/albumNotifArt"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="0dp"
+            android:scaleType="centerCrop"/>
+
+        <ImageView
+            android:id="@+id/fadeOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="0dp"
+            android:background="@android:color/transparent"
+            android:scaleType="centerCrop"/>
+
+    </FrameLayout>
+
+</LinearLayout>
