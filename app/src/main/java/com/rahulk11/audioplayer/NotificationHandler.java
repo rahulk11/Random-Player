@@ -6,20 +6,16 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.LinearGradient;
 import android.graphics.PorterDuff;
-import android.graphics.Shader;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RectShape;
 import android.media.AudioManager;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.support.v4.content.res.ResourcesCompat;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.support.v7.graphics.Palette;
@@ -43,17 +39,19 @@ public class NotificationHandler extends Notification {
     private static final String ACTION_CLOSE = "com.rahulk11.audioplayer.ACTION_CLOSE";
 
     private static final int notifID = 54388;
-    private static RemoteViews notificationView;
+    private RemoteViews notificationView;
     private Notification notification;
-    private Canvas canvas;
-    private Bitmap gradientBitmap;
-    private float dp, dpi;
-    private static boolean isOldLayout = false;
+    private Canvas canvas, canvasOverlay;
+    private Bitmap gradientBitmap, gradientBitmapOverlay;
+    private float dp;
+    private static boolean isOldLayout = false, staticBool = true;;
+    private boolean isFirstTime = true;
 
     @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
-    public NotificationHandler(Context ctx1) {
+    private NotificationHandler(Context ctx1) {
         super();
         ctx = ctx1;
+        staticBool = this.isFirstTime;
         mNotificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         notification = new Notification(R.drawable.play_button, null, System.currentTimeMillis());
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -68,12 +66,21 @@ public class NotificationHandler extends Notification {
         notification.contentIntent = pendingNotificationIntent;
         notification.flags |= Notification.FLAG_NO_CLEAR;
 
-        dpi = ctx.getResources().getDisplayMetrics().xdpi;
         dp = ctx.getResources().getDisplayMetrics().density;
-
-        gradientBitmap = Bitmap.createBitmap(Math.round(288 * dp), Math.round(72 * dp), Bitmap.Config.ARGB_8888);
-        canvas = new Canvas(gradientBitmap);
+//        initGradientBitmap();
     }
+
+    private static NotificationHandler notificationHandler = null;
+    public static NotificationHandler getInstance(Context ctx1){
+       if(notificationHandler!=null)
+           return  notificationHandler;
+       else{
+           notificationHandler = new NotificationHandler(ctx1);
+           return notificationHandler;
+       }
+    }
+
+
 
     public void setListeners() {
 
@@ -114,15 +121,16 @@ public class NotificationHandler extends Notification {
                     PlaybackManager.playPrev(true);
                     break;
                 case ACTION_CLOSE:
-                    onServiceDestroy();
+                    notificationHandler.onServiceDestroy();
                     PlaybackManager.stopService();
                     break;
                 case Intent.ACTION_HEADSET_PLUG:
                     //noinspection deprecation
-                    if (ctx != null)
+                    if (ctx != null && !staticBool && SongService.isPlaying())
                         if (!((AudioManager) ctx.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn()) {
-                            PlaybackManager.playPauseEvent(true, SongService.isPlaying(), SongService.getCurrPos());
+                            PlaybackManager.playPauseEvent(true, true, SongService.getCurrPos());
                         }
+                    staticBool = false;
                     break;
 
             }
@@ -152,6 +160,10 @@ public class NotificationHandler extends Notification {
                                 -1, vibrantTitleColor, PorterDuff.Mode.MULTIPLY, -1});
                         setDrawableParameters.invoke(notificationView, new Object[]{R.id.closeNotifBtn, false,
                                 -1, vibrantTitleColor, PorterDuff.Mode.MULTIPLY, -1});
+                        if(!isOldLayout){
+                            setDrawableParameters.invoke(notificationView, new Object[]{R.id.prevNotifBtn, false,
+                                    -1, vibrantTitleColor, PorterDuff.Mode.MULTIPLY, -1});
+                        }
                     }
                 } catch (InvocationTargetException e) {
                     e.printStackTrace();
@@ -169,6 +181,10 @@ public class NotificationHandler extends Notification {
                                 -1, vibrantTitleColor, PorterDuff.Mode.MULTIPLY, -1});
                         setDrawableParameters.invoke(notificationView, new Object[]{R.id.closeNotifBtn, false,
                                 -1, vibrantTitleColor, PorterDuff.Mode.MULTIPLY, -1});
+                        if(!isOldLayout){
+                            setDrawableParameters.invoke(notificationView, new Object[]{R.id.prevNotifBtn, false,
+                                    -1, vibrantTitleColor, PorterDuff.Mode.MULTIPLY, -1});
+                        }
                     }
                 } catch (InvocationTargetException e) {
                     e.printStackTrace();
@@ -182,13 +198,17 @@ public class NotificationHandler extends Notification {
     private String title = "";
     private int vibrantTitleColor = 0, vibrantBodyColor = 0;
 
-    public static void onServiceDestroy() {
+    public void onServiceDestroy() {
         mNotificationManager.cancel(notifID);
+        gradientBitmap=null;
+        gradientBitmapOverlay=null;
+        System.gc();
     }
 
     private void songChange(final byte[] byteCoverArt, String title1, final String artist, final String album, final boolean isPlay) {
         this.title = title1;
         new Thread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void run() {
                 setSongDetail(byteCoverArt, title, artist, album);
@@ -217,9 +237,10 @@ public class NotificationHandler extends Notification {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void setSongDetail(final byte[] byteCoverArt, final String title1, final String artist, final String album) {
         if (byteCoverArt != null) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(byteCoverArt, 0, byteCoverArt.length);
+            Bitmap bitmap = AllSongListAdapter.getBitmap(ctx, byteCoverArt, true);
             if (bitmap != null) {
                 notificationView.setImageViewBitmap(R.id.albumNotifArt, bitmap);
                 Palette palette = createPaletteSync(bitmap);
@@ -230,25 +251,39 @@ public class NotificationHandler extends Notification {
                     vibrantTitleColor = vibrantSwatch.getTitleTextColor();
                     int dominantBodyColor = dominantSwatch.getRgb();
 //                    int dominantTitleColor = dominantSwatch.getTitleTextColor();
-                    int[] colors;
+                    int[] colors, colorsOverlay;
                     if (isOldLayout) {
                         colors = new int[]{vibrantBodyColor, dominantBodyColor};
-                    } else colors = new int[]{dominantBodyColor, vibrantBodyColor};
+                        colorsOverlay = new int[]{ctx.getResources().getColor(R.color.colorTransparent), vibrantBodyColor};
+                    } else {
+                        colors = new int[]{dominantBodyColor, vibrantBodyColor};
+                        colorsOverlay = new int[]{vibrantBodyColor, ctx.getColor(R.color.colorTransparent)};
+                    }
                     notificationView.setInt(R.id.songTitle, "setTextColor", vibrantTitleColor);
                     notificationView.setInt(R.id.songArtist, "setTextColor", vibrantTitleColor);
                     notificationView.setInt(R.id.songAlbum, "setTextColor", vibrantTitleColor);
 
+                    initGradientBitmap();
 
                     GradientDrawable gradientDrawable = new GradientDrawable(
                             GradientDrawable.Orientation.LEFT_RIGHT, colors);
+                    GradientDrawable gradientDrawableOverlay = new GradientDrawable(
+                            GradientDrawable.Orientation.LEFT_RIGHT, colorsOverlay);
 
                     gradientDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-                    gradientDrawable.setCornerRadius(5 * (dpi / 160));
                     gradientDrawable.draw(canvas);
 
+                    gradientDrawableOverlay.setBounds(0, 0, canvasOverlay.getWidth(), canvasOverlay.getHeight());
+                    gradientDrawableOverlay.setGradientCenter(canvasOverlay.getWidth()/3, canvasOverlay.getHeight()/2);
+                    gradientDrawableOverlay.draw(canvasOverlay);
+                    notificationView.setImageViewBitmap(R.id.fadeOverlay, gradientBitmapOverlay);
                     notificationView.setImageViewBitmap(R.id.ivBackground, gradientBitmap);
                 }
+            } else{
+                notificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.play_button);
             }
+        } else{
+            notificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.play_button);
         }
         notificationView.setTextViewText(R.id.songTitle, title1);
         notificationView.setTextViewText(R.id.songArtist, artist);
@@ -275,5 +310,11 @@ public class NotificationHandler extends Notification {
         }
         return null;
     }
-
+    private void initGradientBitmap(){
+        gradientBitmap = Bitmap.createBitmap(Math.round(288 * dp), Math.round(72 * dp), Bitmap.Config.ARGB_8888);
+        canvas = new Canvas(gradientBitmap);
+        int pixels = AllSongListAdapter.calculatePixels(40, ctx);
+        gradientBitmapOverlay = Bitmap.createBitmap(pixels, pixels, Bitmap.Config.ARGB_8888);
+        canvasOverlay = new Canvas(gradientBitmapOverlay);
+    }
 }
