@@ -127,6 +127,9 @@ public class PlaybackManager {
     public static void stopService() {
         mContext.startService(
                 new Intent(mContext, SongService.class).setAction(SongService.ACTION_STOP));
+    }
+
+    public static void onStopService(){
         ((MainActivity) mContext).setPlayPauseView(false);
     }
 
@@ -152,32 +155,42 @@ public class PlaybackManager {
 
     public static boolean goAhead = true;
 
-    public static void playSong(HashMap<String, String> hashMap) {
+    public static void playSong(final HashMap<String, String> hashMap) {
         goAhead = false;
         setPlayingSongPref(hashMap);
-        Intent i = new Intent(mContext, SongService.class);
-        i.setAction(SongService.ACTION_PLAY);
-        i.putExtra(MainActivity.SONG_PATH, hashMap.get(MainActivity.SONG_PATH));
-        i.putExtra(MainActivity.SONG_TITLE, hashMap.get(MainActivity.SONG_TITLE));
-        i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
-        i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
-        mContext.startService(i);
-        ((MainActivity) mContext).setPlayPauseView(true);
-    }
-
-    private static void seekTo(int progress, HashMap<String, String> hashMap) {
-        if (goAhead) {
-            goAhead = false;
-            Intent i = new Intent(mContext, SongService.class);
-            if (hashMap != null) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Intent i = new Intent(mContext, SongService.class);
+                i.setAction(SongService.ACTION_PLAY);
                 i.putExtra(MainActivity.SONG_PATH, hashMap.get(MainActivity.SONG_PATH));
                 i.putExtra(MainActivity.SONG_TITLE, hashMap.get(MainActivity.SONG_TITLE));
                 i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
                 i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
+                mContext.startService(i);
             }
-            i.setAction(SongService.ACTION_SEEK);
-            i.putExtra("seekTo", progress);
-            mContext.startService(i);
+        }).start();
+        ((MainActivity) mContext).setPlayPauseView(true);
+    }
+
+    private static void seekTo(final int progress, final HashMap<String, String> hashMap) {
+        if (goAhead) {
+            goAhead = false;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Intent i = new Intent(mContext, SongService.class);
+                    if (hashMap != null) {
+                        i.putExtra(MainActivity.SONG_PATH, hashMap.get(MainActivity.SONG_PATH));
+                        i.putExtra(MainActivity.SONG_TITLE, hashMap.get(MainActivity.SONG_TITLE));
+                        i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
+                        i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
+                    }
+                    i.setAction(SongService.ACTION_SEEK);
+                    i.putExtra("seekTo", progress);
+                    mContext.startService(i);
+                }
+            }).start();
         }
     }
 
@@ -211,7 +224,9 @@ public class PlaybackManager {
             if (isShuffle && shufflePosList.contains(pos)) {
                 int index = shufflePosList.indexOf(pos);
                 if (index != 0) pos = shufflePosList.get(--index);
-                else pos = shufflePos();
+                else {
+                    pos = shufflePos();
+                }
             } else pos -= 1;
             if (pos > -1 && pos < songsList.size()) {
                 HashMap<String, String> hashMap = songsList.get(pos);
@@ -254,6 +269,7 @@ public class PlaybackManager {
     }
 
     private static int shufflePos() {
+
         int min = 0, max = (songsList.size() - 1);
         int range = (max - min) + 1;
         int shuffledPos = (int) (Math.random() * range) + min;

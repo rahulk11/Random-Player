@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -60,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = this;
-        setContentView(com.rahulk11.audioplayer.R.layout.activity_main);
+        setContentView(R.layout.activity_main);
         init();
         toolbarStatusBar();
         initListeners();
@@ -306,9 +308,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void loadSongInfo(HashMap<String, String> songDetail, boolean seeking) {
-        String title = songDetail.get("songTitle");
-        String artist = songDetail.get("artistName");
-        int milliSecDuration = Integer.parseInt(songDetail.get("songDuration"));
+        String title = songDetail.get(SONG_TITLE);
+        String artist = songDetail.get(ARTIST_NAME);
+        String path = songDetail.get(SONG_PATH);
+        int milliSecDuration = Integer.parseInt(songDetail.get(SONG_DURATION));
         if (txt_playesongname != null) {
             txt_playesongname.setText(title);
             txt_playesongname_slidetoptwo.setText(title);
@@ -324,6 +327,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 thread = new Thread(runnable);
                 thread.start();
             }
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            if(!path.equals("") && path!=null){
+                mmr.setDataSource(path);
+                byte[] byteData = mmr.getEmbeddedPicture();
+                Bitmap bitmap = null;
+                if(byteData != null){
+                    bitmap = AllSongListAdapter.getBitmap(mContext, byteData, false);
+                    if(bitmap!=null)
+                        songAlbumbg.setImageBitmap(bitmap);
+                    else songAlbumbg.setImageResource(R.drawable.play_button);
+                } else songAlbumbg.setImageResource(R.drawable.play_button);
+            }
+
+
         }
 //        updateProgress(songsManager);
     }

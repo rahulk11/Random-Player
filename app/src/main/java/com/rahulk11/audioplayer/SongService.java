@@ -38,7 +38,9 @@ public class SongService extends Service {
     private NotificationHandler notificationHandler;
     private static byte[] byteData = null;
     private static int result = 11;
-    private static MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
+
+
+    private MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(MediaPlayer mp) {
             if (mp != null && !mp.isPlaying() && PlaybackManager.goAhead) {
@@ -49,7 +51,7 @@ public class SongService extends Service {
         }
     };
 
-    private static AudioManager.OnAudioFocusChangeListener focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+    private AudioManager.OnAudioFocusChangeListener focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
         public void onAudioFocusChange(int focusChange) {
             switch (focusChange) {
@@ -75,34 +77,36 @@ public class SongService extends Service {
         }
     };
 
+    private PhoneStateListener phoneStateListener = new PhoneStateListener() {
+        @Override
+        public void onCallStateChanged(int state, String incomingNumber) {
+            if (state == TelephonyManager.CALL_STATE_RINGING) {
+                if (player.isPlaying()) {
+                    PlaybackManager.playPauseEvent(false, true, -1);
+                }
+            } else if (state == TelephonyManager.CALL_STATE_IDLE) {
+                if (player != null && !player.isPlaying()) {
+                    PlaybackManager.playPauseEvent(false, false, player.getCurrentPosition());
+                }
+            } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
+                if (player.isPlaying()) {
+                    PlaybackManager.playPauseEvent(false, true, -1);
+                }
+            }
+            super.onCallStateChanged(state, incomingNumber);
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
         mContext = getApplicationContext();
-        notificationHandler = new NotificationHandler(mContext);
-
+        notificationHandler = NotificationHandler.getInstance(mContext);
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         player = new MediaPlayer();
         player.setOnCompletionListener(onCompletionListener);
 
         try {
-            PhoneStateListener phoneStateListener = new PhoneStateListener() {
-                @Override
-                public void onCallStateChanged(int state, String incomingNumber) {
-                    if (state == TelephonyManager.CALL_STATE_RINGING) {
-                        if (player.isPlaying()) {
-                            PlaybackManager.playPauseEvent(false, true, -1);
-                        }
-                    } else if (state == TelephonyManager.CALL_STATE_IDLE) {
-                        player.start();
-                    } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
-                        if (player.isPlaying()) {
-                            PlaybackManager.playPauseEvent(false, true, -1);
-                        }
-                    }
-                    super.onCallStateChanged(state, incomingNumber);
-                }
-            };
             TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
             if (mgr != null) {
                 mContext.getSystemService(Context.TELEPHONY_SERVICE);
@@ -125,100 +129,19 @@ public class SongService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent.getAction();
-        switch (action) {
-            case ACTION_PLAY:
-                data = intent.getStringExtra(MainActivity.SONG_PATH);
-                title = intent.getStringExtra(MainActivity.SONG_TITLE);
-                artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
-                album = intent.getStringExtra(MainActivity.ALBUM_NAME);
-                try {
-                    player.reset();
-                    player.setDataSource(data);
-                    player.prepare();
-                    result = audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
-                            AudioManager.AUDIOFOCUS_GAIN);
-                    if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                        player.start();
-                        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-                        mmr.setDataSource(data);
-                        byteData = mmr.getEmbeddedPicture();
-                        notificationHandler.showNotif(byteData, title, artist, album, true);
-                        PlaybackManager.goAhead = true;
-                    }
-                } catch (IOException e) {
-                    PlaybackManager.goAhead = true;
-                    e.printStackTrace();
-                }
-                break;
-            case ACTION_PAUSE:
-                if (player.isPlaying()) {
-                    player.pause();
-                    notificationHandler.showNotif(byteData, title, artist, album, false);
-                    PlaybackManager.goAhead = true;
-                }
-                break;
-            case ACTION_RESUME:
-                if (player != null) {
-                    result = audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
-                            AudioManager.AUDIOFOCUS_GAIN);
-                    if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                        player.start();
-                        notificationHandler.showNotif(byteData, title, artist, album, true);
-                        PlaybackManager.goAhead = true;
-                    }
-                }
-                break;
-            case ACTION_STOP:
-                if (player != null) {
-                    PlaybackManager.goAhead = true;
-                    stopSelf();
-                }
-                break;
-            case ACTION_SEEK:
-                final int seekTo = intent.getIntExtra("seekTo", 0);
-                data = intent.getStringExtra(MainActivity.SONG_PATH);
-                title = intent.getStringExtra(MainActivity.SONG_TITLE);
-                artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
-                album = intent.getStringExtra(MainActivity.ALBUM_NAME);
-                if (player != null) {
-                    try {
-                        if (!android.text.TextUtils.isEmpty(data)) {
-                            player.reset();
-                            player.setDataSource(data);
-                            player.prepare();
-                            if (byteData == null) {
-                                MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-                                mmr.setDataSource(data);
-                                byteData = mmr.getEmbeddedPicture();
-                            }
-                            player.seekTo(seekTo);
-                            player.start();
-                            notificationHandler.showNotif(byteData, title, artist, album, true);
-                            PlaybackManager.goAhead = true;
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                break;
-        }
+        performAction(intent);
         return Service.START_NOT_STICKY;
     }
 
-    public IBinder onUnBind(Intent arg0) {
-        // TO DO Auto-generated method
-        return null;
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return super.onUnbind(intent);
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
         onDestroy();
-    }
-
-    public void onPause() {
-
     }
 
     @Override
@@ -228,8 +151,8 @@ public class SongService extends Service {
         player.release();
         player = null;
         unregisterReceiver(receiver);
-        NotificationHandler.onServiceDestroy();
-        stopSelf();
+        notificationHandler.onServiceDestroy();
+        PlaybackManager.onStopService();
     }
 
     @Override
@@ -237,6 +160,95 @@ public class SongService extends Service {
 
     }
 
+    public void performAction(final Intent intent) {
+        final String action = intent.getAction();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                switch (action) {
+                    case ACTION_PLAY:
+                        data = intent.getStringExtra(MainActivity.SONG_PATH);
+                        title = intent.getStringExtra(MainActivity.SONG_TITLE);
+                        artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
+                        album = intent.getStringExtra(MainActivity.ALBUM_NAME);
+                        try {
+                            player.reset();
+                            player.setDataSource(data);
+                            player.prepare();
+                            result = audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
+                                    AudioManager.AUDIOFOCUS_GAIN);
+                            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                                player.start();
+                                MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                                mmr.setDataSource(data);
+                                byteData = mmr.getEmbeddedPicture();
+                                notificationHandler.showNotif(byteData, title, artist, album, true);
+                                PlaybackManager.goAhead = true;
+                            }
+                        } catch (IOException e) {
+                            PlaybackManager.goAhead = true;
+                            e.printStackTrace();
+                        }
+                        break;
+                    case ACTION_PAUSE:
+                        if (player.isPlaying()) {
+                            player.pause();
+                            notificationHandler.showNotif(byteData, title, artist, album, false);
+                            PlaybackManager.goAhead = true;
+                        }
+                        break;
+                    case ACTION_RESUME:
+                        if (player != null) {
+                            result = audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
+                                    AudioManager.AUDIOFOCUS_GAIN);
+                            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                                player.start();
+                                notificationHandler.showNotif(byteData, title, artist, album, true);
+                                PlaybackManager.goAhead = true;
+                            }
+                        }
+                        break;
+                    case ACTION_STOP:
+                        if (player != null) {
+                            PlaybackManager.goAhead = true;
+                            stopSelf();
+                        }
+                        break;
+                    case ACTION_SEEK:
+                        final int seekTo = intent.getIntExtra("seekTo", 0);
+                        data = intent.getStringExtra(MainActivity.SONG_PATH);
+                        title = intent.getStringExtra(MainActivity.SONG_TITLE);
+                        artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
+                        album = intent.getStringExtra(MainActivity.ALBUM_NAME);
+                        if (player != null) {
+                            try {
+                                result = audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
+                                        AudioManager.AUDIOFOCUS_GAIN);
+                                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                                    if (!android.text.TextUtils.isEmpty(data)) {
+                                        player.reset();
+                                        player.setDataSource(data);
+                                        player.prepare();
+                                        if (byteData == null) {
+                                            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                                            mmr.setDataSource(data);
+                                            byteData = mmr.getEmbeddedPicture();
+                                        }
+                                        player.seekTo(seekTo);
+                                        player.start();
+                                        notificationHandler.showNotif(byteData, title, artist, album, true);
+                                    }
+                                }
+                                PlaybackManager.goAhead = true;
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        break;
+                }
+            }
+        }).start();
+    }
 
     public static boolean isPlaying() {
         if (player != null)
