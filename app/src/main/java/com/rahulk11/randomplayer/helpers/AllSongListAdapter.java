@@ -1,0 +1,183 @@
+package com.rahulk11.randomplayer.helpers;
+
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.os.Build;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import com.rahulk11.randomplayer.MainActivity;
+import com.rahulk11.randomplayer.R;
+
+/**
+ * Created by rahul on 6/8/2017.
+ */
+
+public class AllSongListAdapter extends BaseAdapter {
+
+    private Context mContext = null;
+    private LayoutInflater layoutInflater;
+    private ArrayList<HashMap<String, String>> sList;
+
+    public AllSongListAdapter(Context mContext, ArrayList<HashMap<String, String>> sList) {
+        this.mContext = mContext;
+        this.layoutInflater = LayoutInflater.from(mContext);
+        this.sList = sList;
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return null;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return 0;
+    }
+
+    @Override
+    public View getView(final int position, View convertView, ViewGroup parent) {
+
+        ViewHolder mViewHolder;
+        if (convertView == null) {
+            mViewHolder = new ViewHolder();
+            convertView = layoutInflater.inflate(R.layout.inflate_allsongsitem, null);
+            mViewHolder.song_row = (LinearLayout) convertView.findViewById(R.id.inflate_allsong_row);
+            mViewHolder.textViewSongName = (TextView) convertView.findViewById(R.id.inflate_allsong_textsongname);
+            mViewHolder.textViewSongArtisNameAndDuration = (TextView) convertView.findViewById(R.id.inflate_allsong_textsongArtisName_duration);
+            mViewHolder.imageSongThm = (ImageView) convertView.findViewById(R.id.inflate_allsong_imgSongThumb);
+            mViewHolder.imagemore = (ImageView) convertView.findViewById(R.id.img_moreicon);
+            convertView.setTag(mViewHolder);
+        } else {
+            mViewHolder = (ViewHolder) convertView.getTag();
+        }
+        String title = "";
+        String path = "";
+        if (position < sList.size()) {
+            title = sList.get(position).get("songTitle");
+            path = sList.get(position).get("songPath");
+        }
+
+        mViewHolder.textViewSongName.setText(title);
+        mViewHolder.textViewSongArtisNameAndDuration.setText(((MainActivity) mContext)
+                .calculateDuration(Integer.parseInt(sList.get(position).get("songDuration")))
+                    + " | " + sList.get(position).get("artistName"));
+//            imageLoader.displayImage(contentURI, mViewHolder.imageSongThm, options);
+
+        mViewHolder.imagemore.setColorFilter(Color.DKGRAY);
+        if (Build.VERSION.SDK_INT > 15) {
+            mViewHolder.imagemore.setImageAlpha(255);
+        } else {
+            mViewHolder.imagemore.setAlpha(255);
+        }
+
+        mViewHolder.imagemore.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                try {
+                    PopupMenu popup = new PopupMenu(mContext, v);
+                    popup.getMenuInflater().inflate(R.menu.list_item_option, popup.getMenu());
+                    popup.show();
+                    popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+
+                            switch (item.getItemId()) {
+                                case R.id.playnext:
+                                    break;
+                                case R.id.addtoque:
+                                    break;
+                                case R.id.addtoplaylist:
+                                    break;
+                                case R.id.gotoartist:
+                                    break;
+                                case R.id.gotoalbum:
+                                    break;
+                                case R.id.delete:
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            return true;
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        return convertView;
+    }
+
+    @Override
+    public int getCount() {
+        return (sList != null) ? sList.size() : 0;
+    }
+
+    class ViewHolder {
+        TextView textViewSongName;
+        ImageView imageSongThm, imagemore;
+        TextView textViewSongArtisNameAndDuration;
+        LinearLayout song_row;
+    }
+
+    public static Bitmap getBitmap(Context context, byte[] byteCoverArt, boolean isNotif){
+
+//        int pixels = isNotif ? calculatePixels(50, context) : calculatePixels(60, context);
+        int pixels = calculatePixels(40, context);
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+//        options.inJustDecodeBounds = true;
+//        BitmapFactory.decodeByteArray(byteCoverArt, 0, byteCoverArt.length, options);
+
+        options.inSampleSize = calculateInSampleSize(options, pixels, pixels);
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeByteArray(byteCoverArt, 0, byteCoverArt.length, options);
+
+    }
+
+    public static int calculatePixels(int dp, Context context){
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        int px = dp * ((Integer)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return px;
+    }
+
+    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight
+                    && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+}

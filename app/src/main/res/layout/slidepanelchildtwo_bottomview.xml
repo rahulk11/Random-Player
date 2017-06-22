@@ -77,7 +77,7 @@
             android:layout_gravity="center_vertical"
             android:layout_weight="1">
 
-          <com.rahulk11.audioplayer.slidinguppanelhelper.PlayPauseView
+          <com.rahulk11.randomplayer.slidinguppanelhelper.PlayPauseView
                 android:id="@+id/btn_play"
                 android:layout_width="50dp"
                 android:layout_height="50dp"

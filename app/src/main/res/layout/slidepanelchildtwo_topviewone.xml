@@ -58,7 +58,7 @@
         </LinearLayout>
     </LinearLayout>
 
-   <com.rahulk11.audioplayer.slidinguppanelhelper.PlayPauseView
+   <com.rahulk11.randomplayer.slidinguppanelhelper.PlayPauseView
         android:id="@+id/bottombar_play"
         android:layout_width="?attr/actionBarSize"
         android:layout_height="?attr/actionBarSize"

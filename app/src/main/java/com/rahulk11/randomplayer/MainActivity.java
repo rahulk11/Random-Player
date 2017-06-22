@@ -1,33 +1,34 @@
-package com.rahulk11.audioplayer;
+package com.rahulk11.randomplayer;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.os.Build;
-import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.rahulk11.audioplayer.slidinguppanelhelper.PlayPauseView;
-import com.rahulk11.audioplayer.slidinguppanelhelper.SlidingUpPanelLayout;
+import com.rahulk11.randomplayer.helpers.AllSongListAdapter;
+import com.rahulk11.randomplayer.helpers.PlaybackManager;
+import com.rahulk11.randomplayer.helpers.ViewPagerAdapter;
+import com.rahulk11.randomplayer.slidingtabhelper.SlidingTabLayout;
+import com.rahulk11.randomplayer.slidinguppanelhelper.PlayPauseView;
+import com.rahulk11.randomplayer.slidinguppanelhelper.SlidingUpPanelLayout;
 
 import java.util.HashMap;
-import java.util.concurrent.RunnableFuture;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -57,12 +58,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private PlaybackManager playbackManager;
     private SeekBar seekBar;
     Thread thread;
+    ViewPager pager;
+    ViewPagerAdapter adapter;
+    SlidingTabLayout tabs;
+    CharSequence Titles[] = {"Home", "Events"};
+    int Numboftabs = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = this;
         setContentView(R.layout.activity_main);
+
+//        adapter = new ViewPagerAdapter(getSupportFragmentManager(), Titles, Numboftabs);
+//
+//        // Assigning ViewPager View and setting the adapter
+//        pager = (ViewPager) findViewById(R.id.pager);
+//        pager.setAdapter(adapter);
+//
+//        // Assiging the Sliding Tab Layout View
+//        tabs = (SlidingTabLayout) findViewById(R.id.tabs);
+//        tabs.setDistributeEvenly(true); // To make the Tabs Fixed set this true, This makes the tabs Space Evenly in Available width
+//
+//        // Setting Custom Color for the Scroll bar indicator of the Tab View
+//        tabs.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+//            @Override
+//            public int getIndicatorColor(int position) {
+//                return getResources().getColor(R.color.tabsScrollColor);
+//            }
+//        });
+//
+//        // Setting the ViewPager For the SlidingTabsLayout
+//        tabs.setViewPager(pager);
         init();
         toolbarStatusBar();
         initListeners();
@@ -88,34 +115,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void init() {
-        lv_songslist = (ListView) findViewById(com.rahulk11.audioplayer.R.id.recycler_allSongs);
-        mLayout = (SlidingUpPanelLayout) findViewById(com.rahulk11.audioplayer.R.id.sliding_layout);
-        songAlbumbg = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.image_songAlbumbg_mid);
-        img_bottom_slideone = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.img_bottom_slideone);
-        img_bottom_slidetwo = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.img_bottom_slidetwo);
+        lv_songslist = (ListView) findViewById(com.rahulk11.randomplayer.R.id.recycler_allSongs);
+        mLayout = (SlidingUpPanelLayout) findViewById(com.rahulk11.randomplayer.R.id.sliding_layout);
+        songAlbumbg = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.image_songAlbumbg_mid);
+        img_bottom_slideone = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.img_bottom_slideone);
+        img_bottom_slidetwo = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.img_bottom_slidetwo);
 
-        txt_timeprogress = (TextView) findViewById(com.rahulk11.audioplayer.R.id.slidepanel_time_progress);
-        txt_timetotal = (TextView) findViewById(com.rahulk11.audioplayer.R.id.slidepanel_time_total);
-        imgbtn_backward = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.btn_backward);
-        imgbtn_forward = (ImageView) findViewById(com.rahulk11.audioplayer.R.id.btn_forward);
+        txt_timeprogress = (TextView) findViewById(com.rahulk11.randomplayer.R.id.slidepanel_time_progress);
+        txt_timetotal = (TextView) findViewById(com.rahulk11.randomplayer.R.id.slidepanel_time_total);
+        imgbtn_backward = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.btn_backward);
+        imgbtn_forward = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.btn_forward);
 
-        btn_playpause = (PlayPauseView) findViewById(com.rahulk11.audioplayer.R.id.btn_play);
-        btn_playpausePanel = (PlayPauseView) findViewById(com.rahulk11.audioplayer.R.id.bottombar_play);
+        btn_playpause = (PlayPauseView) findViewById(com.rahulk11.randomplayer.R.id.btn_play);
+        btn_playpausePanel = (PlayPauseView) findViewById(com.rahulk11.randomplayer.R.id.bottombar_play);
         seekBar = (SeekBar) findViewById(R.id.seekbar);
         seekBar.setEnabled(false);
         btn_playpausePanel.Pause();
         btn_playpause.Pause();
 
         TypedValue typedvaluecoloraccent = new TypedValue();
-        getTheme().resolveAttribute(com.rahulk11.audioplayer.R.attr.colorAccent, typedvaluecoloraccent, true);
+        getTheme().resolveAttribute(com.rahulk11.randomplayer.R.attr.colorAccent, typedvaluecoloraccent, true);
 
-        txt_playesongname = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_playesongname);
-        txt_songartistname = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_songartistname);
-        txt_playesongname_slidetoptwo = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_playesongname_slidetoptwo);
-        txt_songartistname_slidetoptwo = (TextView) findViewById(com.rahulk11.audioplayer.R.id.txt_songartistname_slidetoptwo);
+        txt_playesongname = (TextView) findViewById(com.rahulk11.randomplayer.R.id.txt_playesongname);
+        txt_songartistname = (TextView) findViewById(com.rahulk11.randomplayer.R.id.txt_songartistname);
+        txt_playesongname_slidetoptwo = (TextView) findViewById(com.rahulk11.randomplayer.R.id.txt_playesongname_slidetoptwo);
+        txt_songartistname_slidetoptwo = (TextView) findViewById(com.rahulk11.randomplayer.R.id.txt_songartistname_slidetoptwo);
 
-        slidepanelchildtwo_topviewone = (RelativeLayout) findViewById(com.rahulk11.audioplayer.R.id.slidepanelchildtwo_topviewone);
-        slidepanelchildtwo_topviewtwo = (RelativeLayout) findViewById(com.rahulk11.audioplayer.R.id.slidepanelchildtwo_topviewtwo);
+        slidepanelchildtwo_topviewone = (RelativeLayout) findViewById(com.rahulk11.randomplayer.R.id.slidepanelchildtwo_topviewone);
+        slidepanelchildtwo_topviewtwo = (RelativeLayout) findViewById(com.rahulk11.randomplayer.R.id.slidepanelchildtwo_topviewtwo);
 
         slidepanelchildtwo_topviewone.setVisibility(View.VISIBLE);
         slidepanelchildtwo_topviewtwo.setVisibility(View.INVISIBLE);
@@ -263,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
 
         switch (v.getId()) {
-            case com.rahulk11.audioplayer.R.id.bottombar_play:
+            case com.rahulk11.randomplayer.R.id.bottombar_play:
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
@@ -278,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 break;
 
-            case com.rahulk11.audioplayer.R.id.btn_play:
+            case com.rahulk11.randomplayer.R.id.btn_play:
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
@@ -293,11 +320,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
 
-            case com.rahulk11.audioplayer.R.id.btn_forward:
+            case com.rahulk11.randomplayer.R.id.btn_forward:
                 playbackManager.playNext(true);
                 break;
 
-            case com.rahulk11.audioplayer.R.id.btn_backward:
+            case com.rahulk11.randomplayer.R.id.btn_backward:
                 playbackManager.playPrev(true);
                 break;
 
@@ -328,13 +355,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 thread.start();
             }
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            if(!path.equals("") && path!=null){
+            if (!path.equals("") && path != null) {
                 mmr.setDataSource(path);
                 byte[] byteData = mmr.getEmbeddedPicture();
                 Bitmap bitmap = null;
-                if(byteData != null){
+                if (byteData != null) {
                     bitmap = AllSongListAdapter.getBitmap(mContext, byteData, false);
-                    if(bitmap!=null)
+                    if (bitmap != null)
                         songAlbumbg.setImageBitmap(bitmap);
                     else songAlbumbg.setImageResource(R.drawable.play_button);
                 } else songAlbumbg.setImageResource(R.drawable.play_button);

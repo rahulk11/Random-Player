@@ -1,4 +1,4 @@
-package com.rahulk11.audioplayer;
+package com.rahulk11.randomplayer.helpers;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +7,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
+
+import com.rahulk11.randomplayer.MainActivity;
+import com.rahulk11.randomplayer.SongService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -188,6 +191,8 @@ public class PlaybackManager {
                     }
                     i.setAction(SongService.ACTION_SEEK);
                     i.putExtra("seekTo", progress);
+                    if(progress==0) i.putExtra("resume", true);
+                    else i.putExtra("resume", false);
                     mContext.startService(i);
                 }
             }).start();

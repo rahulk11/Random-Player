@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AudioPlayer</string>
-    <string name="DataBaseName">AudioPlayer</string>
+    <string name="app_name">Random Player</string>
+    <string name="DataBaseName">RandomPlayer</string>
     <string name="DataBaseName_Version">1.0</string>
 </resources>
