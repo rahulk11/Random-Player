@@ -174,7 +174,11 @@ public class NotificationHandler extends Notification {
     }
 
     public void onServiceDestroy() {
+        vibrantBodyColor = 0;
+        vibrantTitleColor = 0;
+        title = "";
         mNotificationManager.cancel(notifID);
+        notificationHandler = null;
         System.gc();
     }
 
