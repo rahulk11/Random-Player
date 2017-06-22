@@ -178,16 +178,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     slidepanelchildtwo_topviewone.setVisibility(View.VISIBLE);
                     slidepanelchildtwo_topviewtwo.setVisibility(View.INVISIBLE);
                 } else if (slideOffset > 0.0f && slideOffset < 1.0f) {
-                    // if (isExpand) {
-                    // slidepanelchildtwo_topviewone.setAlpha(1.0f);
-                    // slidepanelchildtwo_topviewtwo.setAlpha(1.0f -
-                    // slideOffset);
-                    // } else {
-                    // slidepanelchildtwo_topviewone.setAlpha(1.0f -
-                    // slideOffset);
-                    // slidepanelchildtwo_topviewtwo.setAlpha(1.0f);
-                    // }
-
+                    if(isExpand){
+//                        slidepanelchildtwo_topviewone.setAlpha(1.0f);
+//                        slidepanelchildtwo_topviewtwo.setAlpha(1.0f -
+//                                slideOffset);
+                        slidepanelchildtwo_topviewone.setVisibility(View.VISIBLE);
+                        slidepanelchildtwo_topviewtwo.setVisibility(View.INVISIBLE);
+                    } else {
+//                        slidepanelchildtwo_topviewone.setAlpha(1.0f -
+//                                slideOffset);
+//                        slidepanelchildtwo_topviewtwo.setAlpha(1.0f);
+                        slidepanelchildtwo_topviewone.setVisibility(View.INVISIBLE);
+                        slidepanelchildtwo_topviewtwo.setVisibility(View.VISIBLE);
+                    }
                 } else {
                     isExpand = true;
                     slidepanelchildtwo_topviewone.setVisibility(View.INVISIBLE);
