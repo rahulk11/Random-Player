@@ -359,15 +359,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             if (!path.equals("") && path != null) {
-                mmr.setDataSource(path);
-                byte[] byteData = mmr.getEmbeddedPicture();
-                Bitmap bitmap = null;
-                if (byteData != null) {
-                    bitmap = AllSongListAdapter.getBitmap(mContext, byteData, false);
-                    if (bitmap != null)
-                        songAlbumbg.setImageBitmap(bitmap);
-                    else songAlbumbg.setImageResource(R.drawable.play_button);
-                } else songAlbumbg.setImageResource(R.drawable.play_button);
+                try {
+                    mmr.setDataSource(path);
+                    byte[] byteData = mmr.getEmbeddedPicture();
+                    Bitmap bitmap = null;
+                    if (byteData != null) {
+                        bitmap = AllSongListAdapter.getBitmap(mContext, byteData, false);
+                        if (bitmap != null)
+                            songAlbumbg.setImageBitmap(bitmap);
+                        else songAlbumbg.setImageResource(R.drawable.play_button);
+                    } else songAlbumbg.setImageResource(R.drawable.play_button);
+                    mmr.release();
+                } catch (RuntimeException e) {
+                    e.printStackTrace();
+                    mmr.release();
+                }
+
             }
 
 

@@ -61,7 +61,7 @@ public class SongService extends Service {
                     PlaybackManager.playPauseEvent(false, player.isPlaying(), player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS):
-                    PlaybackManager.playPauseEvent(false, player.isPlaying(), player.getCurrentPosition());
+                    PlaybackManager.playPauseEvent(false, true, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
@@ -181,19 +181,19 @@ public class SongService extends Service {
                                 mmr.setDataSource(data);
                                 byteData = mmr.getEmbeddedPicture();
                                 notificationHandler.showNotif(byteData, title, artist, album, true);
-                                PlaybackManager.goAhead = true;
                             }
                         } catch (IOException e) {
                             PlaybackManager.goAhead = true;
                             e.printStackTrace();
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_PAUSE:
                         if (player.isPlaying()) {
                             player.pause();
                             notificationHandler.showNotif(byteData, title, artist, album, false);
-                            PlaybackManager.goAhead = true;
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_RESUME:
                         if (player != null) {
@@ -202,15 +202,15 @@ public class SongService extends Service {
                             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                                 player.start();
                                 notificationHandler.showNotif(byteData, title, artist, album, true);
-                                PlaybackManager.goAhead = true;
                             }
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_STOP:
                         if (player != null) {
-                            PlaybackManager.goAhead = true;
                             stopSelf();
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_SEEK:
                         final int seekTo = intent.getIntExtra("seekTo", 0);
