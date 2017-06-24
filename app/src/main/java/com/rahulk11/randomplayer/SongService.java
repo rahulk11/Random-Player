@@ -1,24 +1,22 @@
-package com.rahulk11.audioplayer;
+package com.rahulk11.randomplayer;
 
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.rahulk11.randomplayer.helpers.NotificationHandler;
+import com.rahulk11.randomplayer.helpers.PlaybackManager;
+
 import java.io.IOException;
-import java.io.InterruptedIOException;
 
 /**
  * Created by rahul on 6/9/2017.
@@ -63,7 +61,7 @@ public class SongService extends Service {
                     PlaybackManager.playPauseEvent(false, player.isPlaying(), player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS):
-                    PlaybackManager.playPauseEvent(false, player.isPlaying(), player.getCurrentPosition());
+                    PlaybackManager.playPauseEvent(false, true, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
@@ -183,19 +181,19 @@ public class SongService extends Service {
                                 mmr.setDataSource(data);
                                 byteData = mmr.getEmbeddedPicture();
                                 notificationHandler.showNotif(byteData, title, artist, album, true);
-                                PlaybackManager.goAhead = true;
                             }
                         } catch (IOException e) {
                             PlaybackManager.goAhead = true;
                             e.printStackTrace();
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_PAUSE:
                         if (player.isPlaying()) {
                             player.pause();
                             notificationHandler.showNotif(byteData, title, artist, album, false);
-                            PlaybackManager.goAhead = true;
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_RESUME:
                         if (player != null) {
@@ -204,15 +202,15 @@ public class SongService extends Service {
                             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                                 player.start();
                                 notificationHandler.showNotif(byteData, title, artist, album, true);
-                                PlaybackManager.goAhead = true;
                             }
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_STOP:
                         if (player != null) {
-                            PlaybackManager.goAhead = true;
                             stopSelf();
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_SEEK:
                         final int seekTo = intent.getIntExtra("seekTo", 0);
@@ -220,12 +218,13 @@ public class SongService extends Service {
                         title = intent.getStringExtra(MainActivity.SONG_TITLE);
                         artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
                         album = intent.getStringExtra(MainActivity.ALBUM_NAME);
+                        boolean resume = intent.getBooleanExtra("resume", false);
                         if (player != null) {
                             try {
                                 result = audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
                                         AudioManager.AUDIOFOCUS_GAIN);
                                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                                    if (!android.text.TextUtils.isEmpty(data)) {
+                                    if (!android.text.TextUtils.isEmpty(data) && resume) {
                                         player.reset();
                                         player.setDataSource(data);
                                         player.prepare();
@@ -234,10 +233,10 @@ public class SongService extends Service {
                                             mmr.setDataSource(data);
                                             byteData = mmr.getEmbeddedPicture();
                                         }
-                                        player.seekTo(seekTo);
-                                        player.start();
-                                        notificationHandler.showNotif(byteData, title, artist, album, true);
                                     }
+                                    player.seekTo(seekTo);
+                                    player.start();
+                                    notificationHandler.showNotif(byteData, title, artist, album, true);
                                 }
                                 PlaybackManager.goAhead = true;
                             } catch (IOException e) {

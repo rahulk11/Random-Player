@@ -4,10 +4,10 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
-        applicationId "com.rahulk11.audioplayer"
+        applicationId "com.rahulk11.randomplayer"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 1
+        versionCode 110001
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

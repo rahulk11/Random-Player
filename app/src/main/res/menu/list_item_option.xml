@@ -11,8 +11,8 @@
         android:id="@+id/addtoplaylist"
         android:title="Add to playlist" />
     <item
-        android:id="@+id/gotoartis"
-        android:title="Go to artis" />
+        android:id="@+id/gotoartist"
+        android:title="Go to artist" />
     <item
         android:id="@+id/gotoalbum"
         android:title="Go to album" />
