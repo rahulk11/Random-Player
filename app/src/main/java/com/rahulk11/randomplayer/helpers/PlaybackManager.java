@@ -145,7 +145,7 @@ public class PlaybackManager {
             return false;
         } else {
             HashMap<String, String> hashMap = getPlayingSongPref();
-            if (!hashMap.get(MainActivity.SONG_ID).equals("")) {
+            if (hashMap!=null && !hashMap.get(MainActivity.SONG_ID).equals("")) {
                 ((MainActivity) mContext).setPlayPauseView(true);
                 if (seekProgress != -1)
                     seekTo(seekProgress, hashMap);

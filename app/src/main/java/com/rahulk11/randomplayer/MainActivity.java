@@ -11,17 +11,20 @@ import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.rahulk11.randomplayer.helpers.AllSongListAdapter;
+import com.rahulk11.randomplayer.helpers.BitmapPalette;
 import com.rahulk11.randomplayer.helpers.PlaybackManager;
 import com.rahulk11.randomplayer.helpers.ViewPagerAdapter;
 import com.rahulk11.randomplayer.slidingtabhelper.SlidingTabLayout;
@@ -42,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String ARTIST_NAME = "artistName";
     public static final String SONG_DURATION = "songDuration";
     public static final String SONG_POS = "songPosInList";
-
+    private Toolbar toolbar;
     private ListView lv_songslist;
     private AllSongListAdapter mAllSongsListAdapter;
     private SlidingUpPanelLayout mLayout;
@@ -53,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             txt_songartistname, txt_playesongname_slidetoptwo, txt_songartistname_slidetoptwo;
 
     private RelativeLayout slidepanelchildtwo_topviewone, slidepanelchildtwo_topviewtwo;
+    private LinearLayout llBottomLayout;
     private boolean isExpand = false;
     private SharedPreferences sharedPref;
     private PlaybackManager playbackManager;
@@ -109,9 +113,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void toolbarStatusBar() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitle("Audio Player");
     }
 
     private void init() {
@@ -121,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         img_bottom_slideone = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.img_bottom_slideone);
         img_bottom_slidetwo = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.img_bottom_slidetwo);
 
+        llBottomLayout = (LinearLayout) findViewById(R.id.ll_bottom);
         txt_timeprogress = (TextView) findViewById(com.rahulk11.randomplayer.R.id.slidepanel_time_progress);
         txt_timetotal = (TextView) findViewById(com.rahulk11.randomplayer.R.id.slidepanel_time_total);
         imgbtn_backward = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.btn_backward);
@@ -364,11 +368,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     byte[] byteData = mmr.getEmbeddedPicture();
                     Bitmap bitmap = null;
                     if (byteData != null) {
-                        bitmap = AllSongListAdapter.getBitmap(mContext, byteData, false);
-                        if (bitmap != null)
+                        bitmap = BitmapPalette.getBitmap(mContext, byteData, false);
+                        if (bitmap != null){
                             songAlbumbg.setImageBitmap(bitmap);
-                        else songAlbumbg.setImageResource(R.drawable.play_button);
-                    } else songAlbumbg.setImageResource(R.drawable.play_button);
+                            img_bottom_slideone.setImageBitmap(bitmap);
+                            img_bottom_slidetwo.setImageBitmap(bitmap);
+                            Palette palette = BitmapPalette.createPaletteSync(bitmap);
+                            Palette.Swatch darkVibrantSwatch = BitmapPalette.checkDarkVibrantSwatch(palette);
+                            if(darkVibrantSwatch!=null){
+                                int darkVibrantColor = darkVibrantSwatch.getRgb();
+                                int titleTextColor = darkVibrantSwatch.getTitleTextColor();
+                                int bodytextColor = darkVibrantSwatch.getBodyTextColor();
+                                songAlbumbg.setBackgroundColor(darkVibrantColor);
+                                toolbar.setBackgroundColor(darkVibrantColor);
+                                toolbar.setTitleTextColor(titleTextColor);
+                                slidepanelchildtwo_topviewone.setBackgroundColor(darkVibrantColor);
+                                slidepanelchildtwo_topviewtwo.setBackgroundColor(darkVibrantColor);
+                                txt_playesongname.setTextColor(bodytextColor);
+                                txt_playesongname_slidetoptwo.setTextColor(bodytextColor);
+                                txt_songartistname.setTextColor(bodytextColor);
+                                txt_songartistname_slidetoptwo.setTextColor(bodytextColor);
+                                txt_timetotal.setTextColor(bodytextColor);
+                                txt_timeprogress.setTextColor(bodytextColor);
+                                llBottomLayout.setBackgroundColor(darkVibrantColor);
+                            }
+                        } else{
+                            songAlbumbg.setImageResource(R.drawable.random);
+                            img_bottom_slideone.setImageResource(R.drawable.random);
+                            img_bottom_slidetwo.setImageResource(R.drawable.random);}
+                    } else{
+                        songAlbumbg.setImageResource(R.drawable.random);
+                        img_bottom_slideone.setImageResource(R.drawable.random);
+                        img_bottom_slidetwo.setImageResource(R.drawable.random);
+                    }
                     mmr.release();
                 } catch (RuntimeException e) {
                     e.printStackTrace();

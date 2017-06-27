@@ -49,7 +49,7 @@ public class SongService extends Service {
         }
     };
 
-    private AudioManager.OnAudioFocusChangeListener focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+    private static AudioManager.OnAudioFocusChangeListener focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
         public void onAudioFocusChange(int focusChange) {
             switch (focusChange) {
@@ -61,7 +61,8 @@ public class SongService extends Service {
                     PlaybackManager.playPauseEvent(false, player.isPlaying(), player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS):
-                    PlaybackManager.playPauseEvent(false, true, player.getCurrentPosition());
+                    if(PlaybackManager.goAhead)
+                        PlaybackManager.playPauseEvent(false, true, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
@@ -71,7 +72,6 @@ public class SongService extends Service {
                     break;
 
             }
-
         }
     };
 
@@ -207,6 +207,8 @@ public class SongService extends Service {
                         PlaybackManager.goAhead = true;
                         break;
                     case ACTION_STOP:
+                        audioManager = null;
+                        Log.d("AudioFocus", "State: "+result);
                         if (player != null) {
                             stopSelf();
                         }
@@ -238,11 +240,11 @@ public class SongService extends Service {
                                     player.start();
                                     notificationHandler.showNotif(byteData, title, artist, album, true);
                                 }
-                                PlaybackManager.goAhead = true;
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         }
+                        PlaybackManager.goAhead = true;
                         break;
                 }
             }
