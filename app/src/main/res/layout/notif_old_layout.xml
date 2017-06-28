@@ -64,21 +64,24 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:maxLines="1"
-                    android:ellipsize="end"/>
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif"/>
 
                 <TextView
                     android:id="@+id/songAlbum"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
-                    android:maxLines="1"/>
+                    android:maxLines="1"
+                    android:fontFamily="sans-serif"/>
 
                 <TextView
                     android:id="@+id/songArtist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="12sp"
-                    android:maxLines="1"/>
+                    android:maxLines="1"
+                    android:fontFamily="sans-serif"/>
             </LinearLayout>
 
 
@@ -110,7 +113,8 @@
                     android:padding="3dp"
                     android:scaleType="centerCrop"
                     android:background="@android:color/transparent"
-                    android:src="@android:drawable/ic_media_pause" />
+                    android:src="@android:drawable/ic_media_pause"
+                    android:visibility="gone"/>
 
                 <ImageButton
                     android:id="@+id/playNotifBtn"
@@ -121,7 +125,7 @@
                     android:scaleType="centerCrop"
                     android:background="@android:color/transparent"
                     android:src="@android:drawable/ic_media_play"
-                    android:visibility="gone"/>
+                    />
 
                 <ImageButton
                     android:id="@+id/nextNotifBtn"

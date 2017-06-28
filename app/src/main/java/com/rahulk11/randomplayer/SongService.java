@@ -28,13 +28,13 @@ public class SongService extends Service {
     public final static String ACTION_RESUME = "RESUME";
     public final static String ACTION_STOP = "STOP";
     public final static String ACTION_SEEK = "SEEK_TO";
+    public final static String UPDATE_NOTIF = "updateNotif";
     private static AudioManager audioManager;
     private static MediaPlayer player;
     private static Context mContext;
     String data = "", title = "", artist = "", album = "";
     private static NotificationHandler.NotifBtnClickReceiver receiver;
     private NotificationHandler notificationHandler;
-    private static byte[] byteData = null;
     private static int result = 11;
 
 
@@ -49,7 +49,7 @@ public class SongService extends Service {
         }
     };
 
-    private AudioManager.OnAudioFocusChangeListener focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+    private static AudioManager.OnAudioFocusChangeListener focusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
         public void onAudioFocusChange(int focusChange) {
             switch (focusChange) {
@@ -61,17 +61,17 @@ public class SongService extends Service {
                     PlaybackManager.playPauseEvent(false, player.isPlaying(), player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS):
-                    PlaybackManager.playPauseEvent(false, true, player.getCurrentPosition());
+                    if(PlaybackManager.goAhead)
+                        PlaybackManager.playPauseEvent(false, true, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
-                    PlaybackManager.playPauseEvent(false, false, player.getCurrentPosition());
+                    if(!player.isPlaying())
+                        PlaybackManager.playPauseEvent(false, false, player.getCurrentPosition());
                     break;
                 default:
                     break;
-
             }
-
         }
     };
 
@@ -172,15 +172,12 @@ public class SongService extends Service {
                         try {
                             player.reset();
                             player.setDataSource(data);
-                            player.prepare();
                             result = audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
                                     AudioManager.AUDIOFOCUS_GAIN);
                             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                                player.prepare();
                                 player.start();
-                                MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-                                mmr.setDataSource(data);
-                                byteData = mmr.getEmbeddedPicture();
-                                notificationHandler.showNotif(byteData, title, artist, album, true);
+                                notificationHandler.showNotif(title, artist, album, true);
                             }
                         } catch (IOException e) {
                             PlaybackManager.goAhead = true;
@@ -191,7 +188,7 @@ public class SongService extends Service {
                     case ACTION_PAUSE:
                         if (player.isPlaying()) {
                             player.pause();
-                            notificationHandler.showNotif(byteData, title, artist, album, false);
+                            notificationHandler.showNotif(title, artist, album, false);
                         }
                         PlaybackManager.goAhead = true;
                         break;
@@ -201,12 +198,14 @@ public class SongService extends Service {
                                     AudioManager.AUDIOFOCUS_GAIN);
                             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                                 player.start();
-                                notificationHandler.showNotif(byteData, title, artist, album, true);
+                                notificationHandler.showNotif(title, artist, album, true);
                             }
                         }
                         PlaybackManager.goAhead = true;
                         break;
                     case ACTION_STOP:
+                        audioManager = null;
+                        Log.d("AudioFocus", "State: "+result);
                         if (player != null) {
                             stopSelf();
                         }
@@ -228,21 +227,19 @@ public class SongService extends Service {
                                         player.reset();
                                         player.setDataSource(data);
                                         player.prepare();
-                                        if (byteData == null) {
-                                            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-                                            mmr.setDataSource(data);
-                                            byteData = mmr.getEmbeddedPicture();
-                                        }
                                     }
                                     player.seekTo(seekTo);
                                     player.start();
-                                    notificationHandler.showNotif(byteData, title, artist, album, true);
+                                    notificationHandler.showNotif(title, artist, album, true);
                                 }
-                                PlaybackManager.goAhead = true;
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         }
+                        PlaybackManager.goAhead = true;
+                        break;
+                    case UPDATE_NOTIF:
+                        notificationHandler.updateNotif(title, artist, album);
                         break;
                 }
             }

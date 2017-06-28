@@ -43,6 +43,7 @@
                 android:freezesText="true"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="@android:color/white"
+                android:fontFamily="sans-serif"
                 android:textStyle="bold" />
 
             <TextView
@@ -54,11 +55,12 @@
                 android:text=""
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="@android:color/white"
+                android:fontFamily="sans-serif"
                 android:textStyle="normal" />
         </LinearLayout>
     </LinearLayout>
 
-   <com.rahulk11.randomplayer.slidinguppanelhelper.PlayPauseView
+   <com.rahulk11.randomplayer.helpers.PlayPauseView
         android:id="@+id/bottombar_play"
         android:layout_width="?attr/actionBarSize"
         android:layout_height="?attr/actionBarSize"
