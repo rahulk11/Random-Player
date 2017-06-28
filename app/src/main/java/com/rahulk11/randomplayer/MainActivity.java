@@ -26,9 +26,9 @@ import android.widget.TextView;
 import com.rahulk11.randomplayer.helpers.AllSongListAdapter;
 import com.rahulk11.randomplayer.helpers.BitmapPalette;
 import com.rahulk11.randomplayer.helpers.PlaybackManager;
-import com.rahulk11.randomplayer.helpers.ViewPagerAdapter;
+import com.rahulk11.randomplayer.slidingtabhelper.ViewPagerAdapter;
 import com.rahulk11.randomplayer.slidingtabhelper.SlidingTabLayout;
-import com.rahulk11.randomplayer.slidinguppanelhelper.PlayPauseView;
+import com.rahulk11.randomplayer.helpers.PlayPauseView;
 import com.rahulk11.randomplayer.slidinguppanelhelper.SlidingUpPanelLayout;
 
 import java.util.HashMap;
@@ -65,8 +65,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ViewPager pager;
     ViewPagerAdapter adapter;
     SlidingTabLayout tabs;
-    CharSequence Titles[] = {"Home", "Events"};
-    int Numboftabs = 2;
+    CharSequence Titles[] = {"All Songs", "Playlists", "Favourites"};
+    int Numboftabs = 3;
+    public static boolean shouldContinue = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,35 +119,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void init() {
-        lv_songslist = (ListView) findViewById(com.rahulk11.randomplayer.R.id.recycler_allSongs);
-        mLayout = (SlidingUpPanelLayout) findViewById(com.rahulk11.randomplayer.R.id.sliding_layout);
-        songAlbumbg = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.image_songAlbumbg_mid);
-        img_bottom_slideone = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.img_bottom_slideone);
-        img_bottom_slidetwo = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.img_bottom_slidetwo);
+        lv_songslist = (ListView) findViewById(R.id.recycler_allSongs);
+        mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        songAlbumbg = (ImageView) findViewById(R.id.image_songAlbumbg_mid);
+        img_bottom_slideone = (ImageView) findViewById(R.id.img_bottom_slideone);
+        img_bottom_slidetwo = (ImageView) findViewById(R.id.img_bottom_slidetwo);
 
         llBottomLayout = (LinearLayout) findViewById(R.id.ll_bottom);
-        txt_timeprogress = (TextView) findViewById(com.rahulk11.randomplayer.R.id.slidepanel_time_progress);
-        txt_timetotal = (TextView) findViewById(com.rahulk11.randomplayer.R.id.slidepanel_time_total);
-        imgbtn_backward = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.btn_backward);
-        imgbtn_forward = (ImageView) findViewById(com.rahulk11.randomplayer.R.id.btn_forward);
+        txt_timeprogress = (TextView) findViewById(R.id.slidepanel_time_progress);
+        txt_timetotal = (TextView) findViewById(R.id.slidepanel_time_total);
+        imgbtn_backward = (ImageView) findViewById(R.id.btn_backward);
+        imgbtn_forward = (ImageView) findViewById(R.id.btn_forward);
 
-        btn_playpause = (PlayPauseView) findViewById(com.rahulk11.randomplayer.R.id.btn_play);
-        btn_playpausePanel = (PlayPauseView) findViewById(com.rahulk11.randomplayer.R.id.bottombar_play);
+        btn_playpause = (PlayPauseView) findViewById(R.id.btn_play);
+        btn_playpausePanel = (PlayPauseView) findViewById(R.id.bottombar_play);
         seekBar = (SeekBar) findViewById(R.id.seekbar);
         seekBar.setEnabled(false);
         btn_playpausePanel.Pause();
         btn_playpause.Pause();
 
         TypedValue typedvaluecoloraccent = new TypedValue();
-        getTheme().resolveAttribute(com.rahulk11.randomplayer.R.attr.colorAccent, typedvaluecoloraccent, true);
+        getTheme().resolveAttribute(R.attr.colorAccent, typedvaluecoloraccent, true);
 
-        txt_playesongname = (TextView) findViewById(com.rahulk11.randomplayer.R.id.txt_playesongname);
-        txt_songartistname = (TextView) findViewById(com.rahulk11.randomplayer.R.id.txt_songartistname);
-        txt_playesongname_slidetoptwo = (TextView) findViewById(com.rahulk11.randomplayer.R.id.txt_playesongname_slidetoptwo);
-        txt_songartistname_slidetoptwo = (TextView) findViewById(com.rahulk11.randomplayer.R.id.txt_songartistname_slidetoptwo);
+        txt_playesongname = (TextView) findViewById(R.id.txt_playesongname);
+        txt_songartistname = (TextView) findViewById(R.id.txt_songartistname);
+        txt_playesongname_slidetoptwo = (TextView) findViewById(R.id.txt_playesongname_slidetoptwo);
+        txt_songartistname_slidetoptwo = (TextView) findViewById(R.id.txt_songartistname_slidetoptwo);
 
-        slidepanelchildtwo_topviewone = (RelativeLayout) findViewById(com.rahulk11.randomplayer.R.id.slidepanelchildtwo_topviewone);
-        slidepanelchildtwo_topviewtwo = (RelativeLayout) findViewById(com.rahulk11.randomplayer.R.id.slidepanelchildtwo_topviewtwo);
+        slidepanelchildtwo_topviewone = (RelativeLayout) findViewById(R.id.slidepanelchildtwo_topviewone);
+        slidepanelchildtwo_topviewtwo = (RelativeLayout) findViewById(R.id.slidepanelchildtwo_topviewtwo);
 
         slidepanelchildtwo_topviewone.setVisibility(View.VISIBLE);
         slidepanelchildtwo_topviewtwo.setVisibility(View.INVISIBLE);
@@ -182,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     slidepanelchildtwo_topviewone.setVisibility(View.VISIBLE);
                     slidepanelchildtwo_topviewtwo.setVisibility(View.INVISIBLE);
                 } else if (slideOffset > 0.0f && slideOffset < 1.0f) {
-                    if(isExpand){
+                    if (isExpand) {
 //                        slidepanelchildtwo_topviewone.setAlpha(1.0f);
 //                        slidepanelchildtwo_topviewtwo.setAlpha(1.0f -
 //                                slideOffset);
@@ -297,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
 
         switch (v.getId()) {
-            case com.rahulk11.randomplayer.R.id.bottombar_play:
+            case R.id.bottombar_play:
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
@@ -312,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 break;
 
-            case com.rahulk11.randomplayer.R.id.btn_play:
+            case R.id.btn_play:
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
@@ -327,11 +328,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
 
-            case com.rahulk11.randomplayer.R.id.btn_forward:
+            case R.id.btn_forward:
                 playbackManager.playNext(true);
                 break;
 
-            case com.rahulk11.randomplayer.R.id.btn_backward:
+            case R.id.btn_backward:
                 playbackManager.playPrev(true);
                 break;
 
@@ -352,66 +353,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             txt_songartistname.setText(artist);
             txt_songartistname_slidetoptwo.setText(artist);
             txt_timetotal.setText(calculateDuration(milliSecDuration));
-            seekBar.setEnabled(true);
             seekBar.setMax((Integer.parseInt(songDetail.get(SONG_DURATION))));
             seekBar.setProgress(0);
+            seekBar.setEnabled(true);
             shouldContinue = true;
             txt_timeprogress.setText("0:00");
             if (seeking) {
                 thread = new Thread(runnable);
                 thread.start();
             }
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            if (!path.equals("") && path != null) {
-                try {
-                    mmr.setDataSource(path);
-                    byte[] byteData = mmr.getEmbeddedPicture();
-                    Bitmap bitmap = null;
-                    if (byteData != null) {
-                        bitmap = BitmapPalette.getBitmap(mContext, byteData, false);
-                        if (bitmap != null){
-                            songAlbumbg.setImageBitmap(bitmap);
-                            img_bottom_slideone.setImageBitmap(bitmap);
-                            img_bottom_slidetwo.setImageBitmap(bitmap);
-                            Palette palette = BitmapPalette.createPaletteSync(bitmap);
-                            Palette.Swatch darkVibrantSwatch = BitmapPalette.checkDarkVibrantSwatch(palette);
-                            if(darkVibrantSwatch!=null){
-                                int darkVibrantColor = darkVibrantSwatch.getRgb();
-                                int titleTextColor = darkVibrantSwatch.getTitleTextColor();
-                                int bodytextColor = darkVibrantSwatch.getBodyTextColor();
-                                songAlbumbg.setBackgroundColor(darkVibrantColor);
-                                toolbar.setBackgroundColor(darkVibrantColor);
-                                toolbar.setTitleTextColor(titleTextColor);
-                                slidepanelchildtwo_topviewone.setBackgroundColor(darkVibrantColor);
-                                slidepanelchildtwo_topviewtwo.setBackgroundColor(darkVibrantColor);
-                                txt_playesongname.setTextColor(bodytextColor);
-                                txt_playesongname_slidetoptwo.setTextColor(bodytextColor);
-                                txt_songartistname.setTextColor(bodytextColor);
-                                txt_songartistname_slidetoptwo.setTextColor(bodytextColor);
-                                txt_timetotal.setTextColor(bodytextColor);
-                                txt_timeprogress.setTextColor(bodytextColor);
-                                llBottomLayout.setBackgroundColor(darkVibrantColor);
-                            }
-                        } else{
-                            songAlbumbg.setImageResource(R.drawable.random);
-                            img_bottom_slideone.setImageResource(R.drawable.random);
-                            img_bottom_slidetwo.setImageResource(R.drawable.random);}
-                    } else{
-                        songAlbumbg.setImageResource(R.drawable.random);
-                        img_bottom_slideone.setImageResource(R.drawable.random);
-                        img_bottom_slidetwo.setImageResource(R.drawable.random);
-                    }
-                    mmr.release();
-                } catch (RuntimeException e) {
-                    e.printStackTrace();
-                    mmr.release();
-                }
-
-            }
-
-
+        }
+        try {
+            BitmapPalette.getColorsFromBitmap(mContext, path, false);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
         }
 //        updateProgress(songsManager);
+    }
+
+    public void setBitmapColors(Bitmap bitmap) {
+        if (songAlbumbg != null) {
+            if (bitmap != null) {
+                songAlbumbg.setImageBitmap(bitmap);
+                img_bottom_slideone.setImageBitmap(bitmap);
+                img_bottom_slidetwo.setImageBitmap(bitmap);
+                toolbar.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
+                toolbar.setTitleTextColor(BitmapPalette.darkVibrantTitleTextColor);
+                slidepanelchildtwo_topviewone.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
+                slidepanelchildtwo_topviewtwo.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
+                txt_playesongname.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
+                txt_playesongname_slidetoptwo.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
+                txt_songartistname.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
+                txt_songartistname_slidetoptwo.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
+                txt_timetotal.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
+                txt_timeprogress.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
+                llBottomLayout.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
+            } else {
+                songAlbumbg.setImageResource(R.drawable.random);
+                img_bottom_slideone.setImageResource(R.drawable.random);
+                img_bottom_slidetwo.setImageResource(R.drawable.random);
+            }
+        }
     }
 
 
@@ -471,6 +453,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 shouldContinue = false;
             }
     }
-
-    public static boolean shouldContinue = false;
 }

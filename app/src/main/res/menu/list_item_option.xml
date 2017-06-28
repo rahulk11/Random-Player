@@ -7,7 +7,7 @@
     <item
         android:id="@+id/addtoque"
         android:title="Add to queue" />
-    <item
+  <!--  <item
         android:id="@+id/addtoplaylist"
         android:title="Add to playlist" />
     <item
@@ -15,7 +15,7 @@
         android:title="Go to artist" />
     <item
         android:id="@+id/gotoalbum"
-        android:title="Go to album" />
+        android:title="Go to album" />  -->
     <item
         android:id="@+id/delete"
         android:title="Delete" />

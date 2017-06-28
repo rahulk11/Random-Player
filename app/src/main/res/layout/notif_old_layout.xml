@@ -113,7 +113,8 @@
                     android:padding="3dp"
                     android:scaleType="centerCrop"
                     android:background="@android:color/transparent"
-                    android:src="@android:drawable/ic_media_pause" />
+                    android:src="@android:drawable/ic_media_pause"
+                    android:visibility="gone"/>
 
                 <ImageButton
                     android:id="@+id/playNotifBtn"
@@ -124,7 +125,7 @@
                     android:scaleType="centerCrop"
                     android:background="@android:color/transparent"
                     android:src="@android:drawable/ic_media_play"
-                    android:visibility="gone"/>
+                    />
 
                 <ImageButton
                     android:id="@+id/nextNotifBtn"

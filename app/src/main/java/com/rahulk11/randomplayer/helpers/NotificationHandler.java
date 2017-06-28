@@ -49,8 +49,6 @@ public class NotificationHandler extends Notification {
     private boolean isFirstTime = true;
     private PendingIntent pendingNotificationIntent;
     private String title = "";
-    private int vibrantTitleTextColor = 0, vibrantRGBColor = 0, vibrantBodyTextColor = 0;
-    private int darkVibrantTitleTextColor = 0, darkVibrantRGBColor = 0, darkVibrantBodyTextColor = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
     private NotificationHandler(Context ctx1) {
@@ -73,9 +71,8 @@ public class NotificationHandler extends Notification {
         }
     }
 
-    public void showNotif(byte[] byteCoverArt, String title1, String artist, String album, final boolean isPlay) {
-
-        if (title1.equalsIgnoreCase(title) && !android.text.TextUtils.isEmpty(title1) && vibrantTitleTextColor != 0) {
+    public void showNotif(String title1, String artist1, String album1, final boolean isPlay) {
+        if (title1.equalsIgnoreCase(title) && !android.text.TextUtils.isEmpty(title1) && BitmapPalette.vibrantTitleTextColor != 0) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -88,8 +85,13 @@ public class NotificationHandler extends Notification {
                 }
             }).start();
         } else {
-            songChange(byteCoverArt, title1, artist, album, isPlay);
+            songChange(title1, artist1, album1, isPlay);
         }
+    }
+
+    public void updateNotif(String title1, String artist1, String album1) {
+        if (notificationView != null)
+            setSongDetail(title1, artist1, album1);
     }
 
     private void initNotificationView() {
@@ -128,14 +130,14 @@ public class NotificationHandler extends Notification {
         bigNotificationView.setOnClickPendingIntent(R.id.closeNotifBtn, pendingCloseIntent);
     }
 
-    private void songChange(final byte[] byteCoverArt, String title1, final String artist, final String album, final boolean isPlay) {
+    private void songChange(String title1, final String artist, final String album, final boolean isPlay) {
         this.title = title1;
         initNotificationView();
         new Thread(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void run() {
-                setSongDetail(byteCoverArt, title, artist, album);
+                setSongDetail(title, artist, album);
                 playPauseEvent(isPlay);
 
                 notification.contentView = notificationView;
@@ -172,29 +174,29 @@ public class NotificationHandler extends Notification {
             }
 
             try {
-                if (vibrantTitleTextColor != 0 && setDrawableParameters != null) {
+                if (BitmapPalette.vibrantTitleTextColor != 0 && setDrawableParameters != null) {
                     setDrawableParameters.invoke(notificationView, new Object[]{R.id.playNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
                     setDrawableParameters.invoke(notificationView, new Object[]{R.id.pauseNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
                     setDrawableParameters.invoke(notificationView, new Object[]{R.id.nextNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
                     setDrawableParameters.invoke(notificationView, new Object[]{R.id.closeNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
 
                     setDrawableParameters.invoke(bigNotificationView, new Object[]{R.id.playNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
                     setDrawableParameters.invoke(bigNotificationView, new Object[]{R.id.pauseNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
                     setDrawableParameters.invoke(bigNotificationView, new Object[]{R.id.nextNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
                     setDrawableParameters.invoke(bigNotificationView, new Object[]{R.id.closeNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
 
                     setDrawableParameters.invoke(notificationView, new Object[]{R.id.prevNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
                     setDrawableParameters.invoke(bigNotificationView, new Object[]{R.id.prevNotifBtn, false,
-                            -1, vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
+                            -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
 
                 }
             } catch (InvocationTargetException e) {
@@ -205,56 +207,34 @@ public class NotificationHandler extends Notification {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private void setSongDetail(final byte[] byteCoverArt, final String title1, final String artist, final String album) {
-        if (byteCoverArt != null) {
-            Bitmap bitmap = BitmapPalette.getBitmap(ctx, byteCoverArt, true);
-            if (bitmap != null) {
-                notificationView.setImageViewBitmap(R.id.albumNotifArt, bitmap);
-                bigNotificationView.setImageViewBitmap(R.id.albumNotifArt, bitmap);
-                Palette palette = BitmapPalette.createPaletteSync(bitmap);
-                Palette.Swatch vibrantSwatch = BitmapPalette.checkVibrantSwatch(palette);
-                Palette.Swatch darkVibrantSwatch = BitmapPalette.checkDarkVibrantSwatch(palette);
-                if (vibrantSwatch != null) {
-                    vibrantRGBColor = vibrantSwatch.getRgb();
-                    vibrantTitleTextColor = vibrantSwatch.getTitleTextColor();
-                    vibrantBodyTextColor = vibrantSwatch.getBodyTextColor();
-                }
-                if(darkVibrantSwatch!=null){
-                    darkVibrantRGBColor = darkVibrantSwatch.getRgb();
-                    darkVibrantTitleTextColor = darkVibrantSwatch.getTitleTextColor();
-                    darkVibrantBodyTextColor = darkVibrantSwatch.getBodyTextColor();
-                }
-                int[] colors, colorsOverlay;
-//                float[] hsl = vibrantSwatch.getHsl();
-//                int[] rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
-//                int color = Color.rgb(rgb[0], rgb[1], rgb[2]);
-                if (isOldLayout) {
-                    colors = new int[]{vibrantRGBColor, darkVibrantRGBColor};
-                    colorsOverlay = new int[]{ctx.getResources().getColor(R.color.colorTransparent), vibrantRGBColor};
-                } else {
-                    colors = new int[]{vibrantRGBColor, darkVibrantRGBColor};
-                    colorsOverlay = new int[]{darkVibrantRGBColor, ctx.getColor(R.color.colorTransparent)};
-                }
-                notificationView.setInt(R.id.songTitle, "setTextColor", vibrantTitleTextColor);
-                notificationView.setInt(R.id.songArtist, "setTextColor", vibrantTitleTextColor);
-                notificationView.setInt(R.id.songAlbum, "setTextColor", vibrantTitleTextColor);
+    private void setSongDetail(final String title1, final String artist, final String album) {
+        if (BitmapPalette.bitmap != null) {
+            notificationView.setImageViewBitmap(R.id.albumNotifArt, BitmapPalette.bitmap);
+            bigNotificationView.setImageViewBitmap(R.id.albumNotifArt, BitmapPalette.bitmap);
 
-                bigNotificationView.setInt(R.id.songTitle, "setTextColor", vibrantTitleTextColor);
-                bigNotificationView.setInt(R.id.songArtist, "setTextColor", vibrantTitleTextColor);
-                bigNotificationView.setInt(R.id.songAlbum, "setTextColor", vibrantTitleTextColor);
-
-                int width = BitmapPalette.calculatePixels(60, ctx);
-                int height = BitmapPalette.calculatePixels(30, ctx);
-                setGradientBitmap(width, height, colors, false);
-                setGradientBitmap(height, height, colorsOverlay, true);
+            int[] colors, colorsOverlay;
+            if (isOldLayout) {
+                colors = new int[]{BitmapPalette.vibrantRGBColor, BitmapPalette.darkVibrantRGBColor};
+                colorsOverlay = new int[]{ctx.getResources().getColor(R.color.colorTransparent), BitmapPalette.vibrantRGBColor};
             } else {
-                notificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.music);
-                bigNotificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.music);
+                colors = new int[]{BitmapPalette.vibrantRGBColor, BitmapPalette.darkVibrantRGBColor};
+                colorsOverlay = new int[]{BitmapPalette.darkVibrantRGBColor, ctx.getColor(R.color.colorTransparent)};
             }
+            notificationView.setInt(R.id.songTitle, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+            notificationView.setInt(R.id.songArtist, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+            notificationView.setInt(R.id.songAlbum, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+
+            bigNotificationView.setInt(R.id.songTitle, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+            bigNotificationView.setInt(R.id.songArtist, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+            bigNotificationView.setInt(R.id.songAlbum, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+
+            int width = BitmapPalette.calculatePixels(60, ctx);
+            int height = BitmapPalette.calculatePixels(30, ctx);
+            setGradientBitmap(width, height, colors, false);
+            setGradientBitmap(height, height, colorsOverlay, true);
         } else {
-            notificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.music);
-            bigNotificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.music);
+            notificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.random);
+            bigNotificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.random);
         }
         notificationView.setTextViewText(R.id.songTitle, title1);
         notificationView.setTextViewText(R.id.songArtist, artist);
@@ -276,8 +256,8 @@ public class NotificationHandler extends Notification {
         if (isOverlay) {
 //            gradientDrawable.setGradientCenter(canvasOverlay.getWidth()/3, canvasOverlay.getHeight()/2);
             notificationView.setImageViewBitmap(R.id.fadeOverlay, gradientBitmap);
-            if(isOldLayout){
-                int[] colorsRev = new int[]{darkVibrantRGBColor, colors[0]};
+            if (isOldLayout) {
+                int[] colorsRev = new int[]{BitmapPalette.darkVibrantRGBColor, colors[0]};
                 Bitmap gradientBigBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                 Canvas bigCanvas = new Canvas(gradientBigBitmap);
                 GradientDrawable gradientBigDrawable = new GradientDrawable(

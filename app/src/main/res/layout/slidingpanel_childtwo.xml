@@ -53,7 +53,7 @@
                     android:id="@+id/image_songAlbumbg_mid"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:src="@mipmap/ic_launcher"
+                    android:src="@drawable/random"
                     android:scaleType="centerCrop"
                     android:background="?colorPrimary"
                     android:visibility="visible"></ImageView>

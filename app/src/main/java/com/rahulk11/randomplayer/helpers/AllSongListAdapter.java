@@ -5,7 +5,9 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.media.MediaMetadataRetriever;
 import android.os.Build;
+import android.support.v7.graphics.Palette;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -17,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -75,9 +78,9 @@ public class AllSongListAdapter extends BaseAdapter {
         mViewHolder.textViewSongName.setText(title);
         mViewHolder.textViewSongArtisNameAndDuration.setText(((MainActivity) mContext)
                 .calculateDuration(Integer.parseInt(sList.get(position).get("songDuration")))
-                    + " | " + sList.get(position).get("artistName"));
-//            imageLoader.displayImage(contentURI, mViewHolder.imageSongThm, options);
-
+                + " | " + sList.get(position).get("artistName"));
+//        Bitmap bitmap = BitmapPalette.getBitmapFromMediaPath(mContext, path, true);
+        mViewHolder.imageSongThm.setImageResource(R.drawable.music);
         mViewHolder.imagemore.setColorFilter(Color.DKGRAY);
         if (Build.VERSION.SDK_INT > 15) {
             mViewHolder.imagemore.setImageAlpha(255);
@@ -90,25 +93,44 @@ public class AllSongListAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 try {
-                    PopupMenu popup = new PopupMenu(mContext, v);
+                    final PopupMenu popup = new PopupMenu(mContext, v);
                     popup.getMenuInflater().inflate(R.menu.list_item_option, popup.getMenu());
                     popup.show();
                     popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
-
+                            HashMap<String, String> hashmap = PlaybackManager.getPlayingSongPref();
+                            int currSong = Integer.parseInt(hashmap.get(MainActivity.SONG_POS));
+                            boolean removed = false;
                             switch (item.getItemId()) {
                                 case R.id.playnext:
+                                    while(PlaybackManager.shufflePosList.contains(position)) {
+                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
+                                    }
+                                    if ( PlaybackManager.shufflePosList.contains(currSong)) {
+                                        int currIndex = PlaybackManager.shufflePosList.indexOf(currSong);
+                                        PlaybackManager.shufflePosList.add(currIndex + 1, position);
+                                    }
                                     break;
                                 case R.id.addtoque:
+                                    while(PlaybackManager.shufflePosList.contains(position)) {
+                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
+                                    }
+                                    if(currSong!=position)
+                                        PlaybackManager.shufflePosList.add(position);
                                     break;
-                                case R.id.addtoplaylist:
-                                    break;
-                                case R.id.gotoartist:
-                                    break;
-                                case R.id.gotoalbum:
-                                    break;
+//                                case R.id.addtoplaylist:
+//                                    break;
+//                                case R.id.gotoartist:
+//                                    break;
+//                                case R.id.gotoalbum:
+//                                    break;
                                 case R.id.delete:
+                                    while(PlaybackManager.shufflePosList.contains(position)) {
+                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
+                                    }
+                                    PlaybackManager.songsList.remove(position);
+                                    notifyDataSetChanged();
                                     break;
                                 default:
                                     break;

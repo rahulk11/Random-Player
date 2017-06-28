@@ -53,6 +53,7 @@ public class PlaybackManager {
         playbackManager = null;
         songsList.clear();
         shufflePosList.clear();
+        goAhead = true;
         playbackManager = new PlaybackManager(mContext);
         return playbackManager;
     }
@@ -171,6 +172,10 @@ public class PlaybackManager {
                 i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
                 i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
                 mContext.startService(i);
+                int pos = Integer.parseInt(hashMap.get(MainActivity.SONG_POS));
+                if(!shufflePosList.contains(pos)){
+                    shufflePosList.add(pos);
+                }
             }
         }).start();
         ((MainActivity) mContext).setPlayPauseView(true);
@@ -194,6 +199,10 @@ public class PlaybackManager {
                     if(progress==0) i.putExtra("resume", true);
                     else i.putExtra("resume", false);
                     mContext.startService(i);
+                    int pos = Integer.parseInt(hashMap.get(MainActivity.SONG_POS));
+                    if(!shufflePosList.contains(pos)){
+                        shufflePosList.add(pos);
+                    }
                 }
             }).start();
         }
@@ -209,8 +218,8 @@ public class PlaybackManager {
                     int index = shufflePosList.indexOf(pos);
                     if (index < (shufflePosList.size() - 1))
                         pos = shufflePosList.get(++index);
-                    else pos = shufflePos();
-                } else pos = shufflePos();
+                    else pos = shufflePos(false);
+                } else pos = shufflePos(false);
             } else pos += 1;
 
             if (pos > -1 && pos < songsList.size()) {
@@ -230,7 +239,7 @@ public class PlaybackManager {
                 int index = shufflePosList.indexOf(pos);
                 if (index != 0) pos = shufflePosList.get(--index);
                 else {
-                    pos = shufflePos();
+                    pos = shufflePos(true);
                 }
             } else pos -= 1;
             if (pos > -1 && pos < songsList.size()) {
@@ -273,21 +282,33 @@ public class PlaybackManager {
         return hashMap;
     }
 
-    private static int shufflePos() {
-
+    private static int shufflePos(boolean isPrev) {
         int min = 0, max = (songsList.size() - 1);
         int range = (max - min) + 1;
         int shuffledPos = (int) (Math.random() * range) + min;
         if (!shufflePosList.contains(shuffledPos)) {
-            shufflePosList.add(shuffledPos);
-        }
-        if (shuffledPos != Integer.parseInt(getPlayingSongPref().get(MainActivity.SONG_POS)))
+            if(!isPrev)
+                shufflePosList.add(shuffledPos);
+            else{
+                int currPos = Integer.parseInt(getPlayingSongPref().get(MainActivity.SONG_POS));
+                if(shufflePosList.contains(currPos)){
+                    shufflePosList.add((shufflePosList.indexOf(currPos)), shuffledPos);
+                }
+            }
             return shuffledPos;
-        else return shufflePos();
+        }
+//        if (shuffledPos != Integer.parseInt(getPlayingSongPref().get(MainActivity.SONG_POS)))
+//            return shuffledPos;
+        else if(shufflePosList.size()<songsList.size())
+            return shufflePos(isPrev);
+        else{
+            shufflePosList.clear();
+            return shufflePos(isPrev);
+        }
     }
 
     public interface LoadSongListener {
-        public void onDoneLoading();
+        void onDoneLoading();
     }
 
 }

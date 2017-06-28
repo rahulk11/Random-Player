@@ -1,4 +1,4 @@
-package com.rahulk11.randomplayer.helpers;
+package com.rahulk11.randomplayer.slidingtabhelper;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
