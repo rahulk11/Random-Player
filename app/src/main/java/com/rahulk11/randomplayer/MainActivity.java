@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
@@ -32,6 +33,8 @@ import com.rahulk11.randomplayer.helpers.PlayPauseView;
 import com.rahulk11.randomplayer.slidinguppanelhelper.SlidingUpPanelLayout;
 
 import java.util.HashMap;
+
+import static com.rahulk11.randomplayer.helpers.BitmapPalette.bitmap;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -229,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 HashMap<String, String> hashMap = PlaybackManager.songsList.get(position);
-                loadSongInfo(hashMap, true);
+//                loadSongInfo(hashMap, true);
                 PlaybackManager.playSong(hashMap);
                 btn_playpause.Play();
                 btn_playpausePanel.Play();
@@ -241,12 +244,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
                     shouldContinue = false;
-                    PlaybackManager.playPauseEvent(false, false, progress);
-                    seekBar.setProgress(progress);
-                    txt_timeprogress.setText(calculateDuration(progress));
-                    shouldContinue = true;
-                    thread = new Thread(runnable);
-                    thread.start();
+                    PlaybackManager.playPauseEvent(false, false, false, progress);
                 }
             }
 
@@ -267,27 +265,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void run() {
             int currSeekPos = SongService.getCurrPos();
             int max = seekBar.getMax();
+            if(currSeekPos>max){
+                currSeekPos = 0;
+            }
             seekBar.setProgress(currSeekPos);
             while (currSeekPos < max && shouldContinue) {
                 try {
                     Thread.sleep(1000);
                     currSeekPos = SongService.getCurrPos();
                     final int finalCurrSeekPos = currSeekPos;
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            txt_timeprogress.setText(calculateDuration(finalCurrSeekPos));
-                        }
-                    });
+                    if(finalCurrSeekPos<max){
+                        seekBar.setProgress(currSeekPos);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                txt_timeprogress.setText(calculateDuration(finalCurrSeekPos));
+                            }
+                        });
+                    }
                 } catch (InterruptedException e) {
                     return;
                 } catch (Exception e) {
                     return;
                 }
-                seekBar.setProgress(currSeekPos);
             }
         }
     };
+
+    public void setSeekProgress(int progress){
+        shouldContinue = true;
+        seekBar.setProgress(progress);
+        thread = new Thread(runnable);
+        thread.start();
+    }
 
     public void setAllSongs() {
         mAllSongsListAdapter = new AllSongListAdapter(mContext, PlaybackManager.songsList);
@@ -299,22 +309,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (v.getId()) {
             case R.id.bottombar_play:
-                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), seekBar.getProgress())) {
+                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), false, seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                     shouldContinue = true;
-                    thread = new Thread(runnable);
-                    thread.start();
+//                    thread = new Thread(runnable);
+//                    thread.start();
                 } else {
                     btn_playpause.Pause();
                     btn_playpausePanel.Pause();
                     shouldContinue = false;
                 }
-
                 break;
 
             case R.id.btn_play:
-                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), seekBar.getProgress())) {
+                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), false, seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                     shouldContinue = true;
@@ -353,14 +362,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             txt_songartistname.setText(artist);
             txt_songartistname_slidetoptwo.setText(artist);
             txt_timetotal.setText(calculateDuration(milliSecDuration));
-            seekBar.setMax((Integer.parseInt(songDetail.get(SONG_DURATION))));
-            seekBar.setProgress(0);
             seekBar.setEnabled(true);
+            seekBar.setMax((Integer.parseInt(songDetail.get(SONG_DURATION))));
+//            seekBar.setProgress(0);
             shouldContinue = true;
-            txt_timeprogress.setText("0:00");
+//            txt_timeprogress.setText("0:00");
             if (seeking) {
-                thread = new Thread(runnable);
-                thread.start();
+//                thread = new Thread(runnable);
+//                thread.start();
             }
         }
         try {
@@ -371,7 +380,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        updateProgress(songsManager);
     }
 
-    public void setBitmapColors(Bitmap bitmap) {
+    public void setBitmapColors() {
         if (songAlbumbg != null) {
             if (bitmap != null) {
                 songAlbumbg.setImageBitmap(bitmap);
@@ -415,6 +424,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onPause() {
+        shouldContinue = false;
         super.onPause();
     }
 
@@ -423,7 +433,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
         if (playbackManager != null) {
             loadSongInfo(PlaybackManager.getPlayingSongPref(), SongService.isPlaying());
-            setPlayPauseView(SongService.isPlaying());
+            if(SongService.isPlaying())
+                playbackManager.playPauseEvent(false, false, true, SongService.getCurrPos());
         } else initPlaybackManager();
     }
 
@@ -436,17 +447,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void setPlayPauseView(boolean isPlaying) {
-        int currPos = SongService.getCurrPos();
-        String text = calculateDuration(currPos);
-        seekBar.setProgress(currPos);
-        txt_timeprogress.setText(text);
+
         if (btn_playpause != null)
             if (isPlaying) {
                 btn_playpause.Play();
                 btn_playpausePanel.Play();
-                shouldContinue = true;
-                thread = new Thread(runnable);
-                thread.start();
             } else {
                 btn_playpause.Pause();
                 btn_playpausePanel.Pause();

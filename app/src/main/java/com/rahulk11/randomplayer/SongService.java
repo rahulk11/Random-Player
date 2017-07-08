@@ -13,6 +13,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.rahulk11.randomplayer.helpers.Listeners;
 import com.rahulk11.randomplayer.helpers.NotificationHandler;
 import com.rahulk11.randomplayer.helpers.PlaybackManager;
 
@@ -37,6 +38,12 @@ public class SongService extends Service {
     private NotificationHandler notificationHandler;
     private static int result = 11;
 
+    private Listeners.MediaPlayerListener mediaPlayerListener = new Listeners.MediaPlayerListener() {
+        @Override
+        public void onMediaPlayerStarted(MediaPlayer mp) {
+            PlaybackManager.mediaPlayerStarted(mp);
+        }
+    };
 
     private MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
@@ -44,7 +51,7 @@ public class SongService extends Service {
             if (mp != null && !mp.isPlaying() && PlaybackManager.goAhead) {
                 PlaybackManager.playNext(true);
             } else {
-                PlaybackManager.playPauseEvent(false, false, mp.getCurrentPosition());
+                PlaybackManager.playPauseEvent(false, false, true, mp.getCurrentPosition());
             }
         }
     };
@@ -58,16 +65,16 @@ public class SongService extends Service {
                     player.setVolume(0.2f, 0.2f);
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT):
-                    PlaybackManager.playPauseEvent(false, player.isPlaying(), player.getCurrentPosition());
+                    PlaybackManager.playPauseEvent(false, player.isPlaying(), true, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS):
                     if(PlaybackManager.goAhead)
-                        PlaybackManager.playPauseEvent(false, true, player.getCurrentPosition());
+                        PlaybackManager.playPauseEvent(false, true, false, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
                     if(!player.isPlaying())
-                        PlaybackManager.playPauseEvent(false, false, player.getCurrentPosition());
+                        PlaybackManager.playPauseEvent(false, false, true, player.getCurrentPosition());
                     break;
                 default:
                     break;
@@ -80,15 +87,15 @@ public class SongService extends Service {
         public void onCallStateChanged(int state, String incomingNumber) {
             if (state == TelephonyManager.CALL_STATE_RINGING) {
                 if (player.isPlaying()) {
-                    PlaybackManager.playPauseEvent(false, true, -1);
+                    PlaybackManager.playPauseEvent(false, true, false, -1);
                 }
             } else if (state == TelephonyManager.CALL_STATE_IDLE) {
                 if (player != null && !player.isPlaying()) {
-                    PlaybackManager.playPauseEvent(false, false, player.getCurrentPosition());
+                    PlaybackManager.playPauseEvent(false, false, true, player.getCurrentPosition());
                 }
             } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
                 if (player.isPlaying()) {
-                    PlaybackManager.playPauseEvent(false, true, -1);
+                    PlaybackManager.playPauseEvent(false, true, false, -1);
                 }
             }
             super.onCallStateChanged(state, incomingNumber);
@@ -182,8 +189,12 @@ public class SongService extends Service {
                         } catch (IOException e) {
                             PlaybackManager.goAhead = true;
                             e.printStackTrace();
+                        } catch (IllegalStateException e){
+                            PlaybackManager.goAhead = true;
+                            e.printStackTrace();
                         }
                         PlaybackManager.goAhead = true;
+                        mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case ACTION_PAUSE:
                         if (player.isPlaying()) {
@@ -202,6 +213,7 @@ public class SongService extends Service {
                             }
                         }
                         PlaybackManager.goAhead = true;
+                        mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case ACTION_STOP:
                         audioManager = null;
@@ -237,9 +249,10 @@ public class SongService extends Service {
                             }
                         }
                         PlaybackManager.goAhead = true;
+                        mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case UPDATE_NOTIF:
-                        notificationHandler.updateNotif(title, artist, album);
+                        notificationHandler.updateNotif(title, artist, album, player.isPlaying());
                         break;
                 }
             }

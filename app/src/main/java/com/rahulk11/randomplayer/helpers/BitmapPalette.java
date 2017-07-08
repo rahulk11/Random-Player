@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.service.notification.NotificationListenerService;
@@ -22,10 +23,21 @@ import java.util.List;
 
 public class BitmapPalette {
     public static Bitmap bitmap;
-    public static int dominantRGBColor = 0, dominantTitleTextColor = 0, dominantBodyTextColor = 0;
-    public static int vibrantRGBColor = 0, vibrantTitleTextColor = 0, vibrantBodyTextColor = 0;
-    public static int darkVibrantRGBColor = 0, darkVibrantTitleTextColor = 0, darkVibrantBodyTextColor = 0;
-    public static int darkMutedRGBColor = 0, darkMutedTitleTextColor = 0, darkMutedBodyTextColor = 0;
+    public static int dominantRGBColor = Color.DKGRAY,
+            dominantTitleTextColor = Color.WHITE,
+            dominantBodyTextColor = Color.LTGRAY;
+
+    public static int vibrantRGBColor = Color.TRANSPARENT,
+            vibrantTitleTextColor = Color.WHITE,
+            vibrantBodyTextColor = Color.LTGRAY;
+
+    public static int darkVibrantRGBColor = Color.TRANSPARENT,
+            darkVibrantTitleTextColor = Color.WHITE,
+            darkVibrantBodyTextColor = Color.LTGRAY;
+
+    public static int darkMutedRGBColor = Color.DKGRAY,
+            darkMutedTitleTextColor = Color.WHITE,
+            darkMutedBodyTextColor = Color.LTGRAY;
 
 
     public static Palette createPaletteSync(Bitmap bitmap) {
@@ -62,28 +74,33 @@ public class BitmapPalette {
         return swatchList;
     }
 
+    private static Listeners.LoadImageListener loadImageListener = new Listeners.LoadImageListener() {
+        @Override
+        public void onImageLoaded() {
+            PlaybackManager.showNotif();
+            PlaybackManager.isFirstLoad = false;
+        }
+    };
+
     public static void getColorsFromBitmap(final Context context, final String path, final boolean isNotif) {
         new AsyncTask<Void, Void, Void>(){
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             @Override
             protected Void doInBackground(Void... params) {
-                Bitmap bitmap1 = null;
                 if (!path.equals("") && path != null) {
                     try {
                         mmr.setDataSource(path);
                         byte[] byteData = mmr.getEmbeddedPicture();
                         if (byteData != null) {
-                            bitmap1 = BitmapPalette.getBitmap(context, byteData, isNotif);
-                        }
+                            bitmap = BitmapPalette.getBitmap(context, byteData, isNotif);
+                        } else bitmap = null;
                         mmr.release();
                     } catch (RuntimeException e) {
                         e.printStackTrace();
                         mmr.release();
                     }
                 }
-                if(bitmap1!=null){
-                    bitmap = bitmap1;
-                    bitmap1 = null;
+                if(bitmap!=null){
                     Palette palette = createPaletteSync(bitmap);
                     Palette.Swatch dominantSwatch = checkDominantSwatch(palette);
                     Palette.Swatch vibrantSwatch = checkVibrantSwatch(palette);
@@ -108,7 +125,7 @@ public class BitmapPalette {
                         darkMutedBodyTextColor = darkMutedSwatch.getBodyTextColor();
                     }
                 } else{
-                    bitmap = null;
+                    resetColors();
                 }
 
                 return null;
@@ -117,12 +134,29 @@ public class BitmapPalette {
             @Override
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
-                ((MainActivity) context).setBitmapColors(bitmap);
-                context.startService(new Intent(context, SongService.class).setAction(SongService.UPDATE_NOTIF));
+                loadImageListener.onImageLoaded();
             }
 
         }.execute();
 
+    }
+
+    private static void resetColors(){
+        dominantRGBColor = Color.DKGRAY;
+        dominantTitleTextColor = Color.WHITE;
+        dominantBodyTextColor = Color.LTGRAY;
+
+        vibrantRGBColor = Color.TRANSPARENT;
+        vibrantTitleTextColor = Color.WHITE;
+        vibrantBodyTextColor = Color.LTGRAY;
+
+        darkVibrantRGBColor = Color.TRANSPARENT;
+        darkVibrantTitleTextColor = Color.WHITE;
+        darkVibrantBodyTextColor = Color.LTGRAY;
+
+        darkMutedRGBColor = Color.DKGRAY;
+        darkMutedTitleTextColor = Color.WHITE;
+        darkMutedBodyTextColor = Color.LTGRAY;
     }
 
     public static Bitmap getBitmap(Context context, byte[] byteCoverArt, boolean isNotif) {

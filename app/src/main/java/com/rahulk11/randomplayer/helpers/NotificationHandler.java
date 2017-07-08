@@ -72,7 +72,7 @@ public class NotificationHandler extends Notification {
     }
 
     public void showNotif(String title1, String artist1, String album1, final boolean isPlay) {
-        if (title1.equalsIgnoreCase(title) && !android.text.TextUtils.isEmpty(title1) && BitmapPalette.vibrantTitleTextColor != 0) {
+        if (title1.equalsIgnoreCase(title) && !android.text.TextUtils.isEmpty(title1)) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -89,9 +89,9 @@ public class NotificationHandler extends Notification {
         }
     }
 
-    public void updateNotif(String title1, String artist1, String album1) {
+    public void updateNotif(String title1, String artist1, String album1, boolean isPlay) {
         if (notificationView != null)
-            setSongDetail(title1, artist1, album1);
+            songChange(title1, artist1, album1, isPlay);
     }
 
     private void initNotificationView() {
@@ -174,7 +174,7 @@ public class NotificationHandler extends Notification {
             }
 
             try {
-                if (BitmapPalette.vibrantTitleTextColor != 0 && setDrawableParameters != null) {
+                if (setDrawableParameters != null) {
                     setDrawableParameters.invoke(notificationView, new Object[]{R.id.playNotifBtn, false,
                             -1, BitmapPalette.vibrantTitleTextColor, PorterDuff.Mode.MULTIPLY, -1});
                     setDrawableParameters.invoke(notificationView, new Object[]{R.id.pauseNotifBtn, false,
@@ -212,30 +212,33 @@ public class NotificationHandler extends Notification {
             notificationView.setImageViewBitmap(R.id.albumNotifArt, BitmapPalette.bitmap);
             bigNotificationView.setImageViewBitmap(R.id.albumNotifArt, BitmapPalette.bitmap);
 
-            int[] colors, colorsOverlay;
-            if (isOldLayout) {
-                colors = new int[]{BitmapPalette.vibrantRGBColor, BitmapPalette.darkVibrantRGBColor};
-                colorsOverlay = new int[]{ctx.getResources().getColor(R.color.colorTransparent), BitmapPalette.vibrantRGBColor};
-            } else {
-                colors = new int[]{BitmapPalette.vibrantRGBColor, BitmapPalette.darkVibrantRGBColor};
-                colorsOverlay = new int[]{BitmapPalette.darkVibrantRGBColor, ctx.getColor(R.color.colorTransparent)};
-            }
-            notificationView.setInt(R.id.songTitle, "setTextColor", BitmapPalette.vibrantTitleTextColor);
-            notificationView.setInt(R.id.songArtist, "setTextColor", BitmapPalette.vibrantTitleTextColor);
-            notificationView.setInt(R.id.songAlbum, "setTextColor", BitmapPalette.vibrantTitleTextColor);
-
-            bigNotificationView.setInt(R.id.songTitle, "setTextColor", BitmapPalette.vibrantTitleTextColor);
-            bigNotificationView.setInt(R.id.songArtist, "setTextColor", BitmapPalette.vibrantTitleTextColor);
-            bigNotificationView.setInt(R.id.songAlbum, "setTextColor", BitmapPalette.vibrantTitleTextColor);
-
-            int width = BitmapPalette.calculatePixels(60, ctx);
-            int height = BitmapPalette.calculatePixels(30, ctx);
-            setGradientBitmap(width, height, colors, false);
-            setGradientBitmap(height, height, colorsOverlay, true);
         } else {
             notificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.random);
             bigNotificationView.setImageViewResource(R.id.albumNotifArt, R.drawable.random);
         }
+
+        int[] colors, colorsOverlay;
+        if (isOldLayout) {
+            colors = new int[]{BitmapPalette.vibrantRGBColor, BitmapPalette.darkVibrantRGBColor};
+            colorsOverlay = new int[]{ctx.getResources().getColor(R.color.colorTransparent), BitmapPalette.vibrantRGBColor};
+        } else {
+            colors = new int[]{BitmapPalette.vibrantRGBColor, BitmapPalette.darkVibrantRGBColor};
+            colorsOverlay = new int[]{BitmapPalette.darkVibrantRGBColor, ctx.getColor(R.color.colorTransparent)};
+        }
+
+        int width = BitmapPalette.calculatePixels(60, ctx);
+        int height = BitmapPalette.calculatePixels(30, ctx);
+        setGradientBitmap(width, height, colors, false);
+        setGradientBitmap(height, height, colorsOverlay, true);
+
+        notificationView.setInt(R.id.songTitle, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+        notificationView.setInt(R.id.songArtist, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+        notificationView.setInt(R.id.songAlbum, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+
+        bigNotificationView.setInt(R.id.songTitle, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+        bigNotificationView.setInt(R.id.songArtist, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+        bigNotificationView.setInt(R.id.songAlbum, "setTextColor", BitmapPalette.vibrantTitleTextColor);
+
         notificationView.setTextViewText(R.id.songTitle, title1);
         notificationView.setTextViewText(R.id.songArtist, artist);
         notificationView.setTextViewText(R.id.songAlbum, album);
@@ -313,7 +316,7 @@ public class NotificationHandler extends Notification {
             String action = intent.getAction();
             switch (action) {
                 case ACTION_PLAY:
-                    PlaybackManager.playPauseEvent(false, SongService.isPlaying(), SongService.getCurrPos());
+                    PlaybackManager.playPauseEvent(false, SongService.isPlaying(), true, SongService.getCurrPos());
                     break;
                 case ACTION_NEXT:
                     PlaybackManager.playNext(true);
@@ -329,7 +332,7 @@ public class NotificationHandler extends Notification {
                     //noinspection deprecaRandom Playervition
                     if (context != null && !staticBool && SongService.isPlaying())
                         if (!((AudioManager) context.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn()) {
-                            PlaybackManager.playPauseEvent(true, true, SongService.getCurrPos());
+                            PlaybackManager.playPauseEvent(true, true, false, SongService.getCurrPos());
                         }
                     staticBool = false;
                     break;

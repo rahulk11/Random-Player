@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -19,7 +20,7 @@ import java.util.HashMap;
  */
 
 public class PlaybackManager {
-
+    public static boolean isFirstLoad = true;
     private Uri allsongsuri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     private String[] projectionSongs = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA, MediaStore.Audio.Media.ALBUM,
@@ -39,7 +40,7 @@ public class PlaybackManager {
         createPlayList();
     }
 
-    private PlaybackManager(Context mContext, LoadSongListener loadSongListener, Uri allsongsuri) {
+    private PlaybackManager(Context mContext, Listeners.LoadSongListener loadSongListener, Uri allsongsuri) {
         this.mContext = mContext;
         sharedPref = mContext.getSharedPreferences(songPref, mContext.MODE_PRIVATE);
         if (loadSongListener != null)
@@ -58,10 +59,10 @@ public class PlaybackManager {
         return playbackManager;
     }
 
-    private LoadSongListener loadSongListener = new LoadSongListener() {
+    private Listeners.LoadSongListener loadSongListener = new Listeners.LoadSongListener() {
+
         @Override
-        public void onDoneLoading() {
-//            if(mContext.getClass().getSimpleName().equals("MainActivity"))
+        public void onSongLoaded() {
             ((MainActivity) mContext).setAllSongs();
         }
     };
@@ -124,7 +125,7 @@ public class PlaybackManager {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            loadSongListener.onDoneLoading();
+            loadSongListener.onSongLoaded();
         }
     }
 
@@ -137,7 +138,7 @@ public class PlaybackManager {
         ((MainActivity) mContext).setPlayPauseView(false);
     }
 
-    public static boolean playPauseEvent(boolean headphone, boolean isPlaying, int seekProgress) {
+    public static boolean playPauseEvent(boolean headphone, boolean isPlaying, boolean isResume, int seekProgress) {
         if (headphone || isPlaying) {
             goAhead = false;
             ((MainActivity) mContext).setPlayPauseView(false);
@@ -145,13 +146,19 @@ public class PlaybackManager {
                     new Intent(mContext, SongService.class).setAction(SongService.ACTION_PAUSE));
             return false;
         } else {
-            HashMap<String, String> hashMap = getPlayingSongPref();
-            if (hashMap!=null && !hashMap.get(MainActivity.SONG_ID).equals("")) {
+            if(isResume){
                 ((MainActivity) mContext).setPlayPauseView(true);
-                if (seekProgress != -1)
-                    seekTo(seekProgress, hashMap);
-                else playSong(hashMap);
+                mContext.startService(
+                        new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
                 return true;
+            }else {
+                HashMap<String, String> hashMap = getPlayingSongPref();
+                if (hashMap!=null && !hashMap.get(MainActivity.SONG_ID).equals("")) {
+                    if (seekProgress != -1)
+                        seekTo(seekProgress, hashMap);
+                    else playSong(hashMap);
+                    return true;
+                }
             }
         }
         return false;
@@ -178,6 +185,7 @@ public class PlaybackManager {
                 }
             }
         }).start();
+        ((MainActivity) mContext).loadSongInfo(hashMap, true);
         ((MainActivity) mContext).setPlayPauseView(true);
     }
 
@@ -205,6 +213,8 @@ public class PlaybackManager {
                     }
                 }
             }).start();
+//            ((MainActivity) mContext).loadSongInfo(hashMap, true);
+            ((MainActivity) mContext).setPlayPauseView(true);
         }
     }
 
@@ -224,7 +234,6 @@ public class PlaybackManager {
 
             if (pos > -1 && pos < songsList.size()) {
                 HashMap<String, String> hashMap = songsList.get(pos);
-                ((MainActivity) mContext).loadSongInfo(hashMap, true);
                 playSong(hashMap);
             }
         }
@@ -244,10 +253,19 @@ public class PlaybackManager {
             } else pos -= 1;
             if (pos > -1 && pos < songsList.size()) {
                 HashMap<String, String> hashMap = songsList.get(pos);
-                ((MainActivity) mContext).loadSongInfo(hashMap, true);
                 playSong(hashMap);
             }
         }
+    }
+
+    public static void mediaPlayerStarted(MediaPlayer mp){
+        ((MainActivity) mContext).setSeekProgress(mp.getCurrentPosition());
+    }
+
+    public static void showNotif(){
+        ((MainActivity) mContext).setBitmapColors();
+        if(!isFirstLoad)
+            mContext.startService(new Intent(mContext, SongService.class).setAction(SongService.UPDATE_NOTIF));
     }
 
     private static void setPlayingSongPref(final HashMap<String, String> songDetail) {
@@ -305,10 +323,6 @@ public class PlaybackManager {
             shufflePosList.clear();
             return shufflePos(isPrev);
         }
-    }
-
-    public interface LoadSongListener {
-        void onDoneLoading();
     }
 
 }
