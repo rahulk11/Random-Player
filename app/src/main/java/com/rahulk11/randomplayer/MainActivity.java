@@ -263,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            int currSeekPos = SongService.getCurrPos();
+            int currSeekPos = seekBar.getProgress();
             int max = seekBar.getMax();
             if(currSeekPos>max){
                 currSeekPos = 0;
@@ -292,11 +292,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    public void setSeekProgress(int progress){
+    public void setSeekProgress(final int progress){
         shouldContinue = true;
         seekBar.setProgress(progress);
-        thread = new Thread(runnable);
-        thread.start();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setPlayPauseView(true);
+                txt_timeprogress.setText(calculateDuration(progress));
+            }
+        });
+        try{
+            thread = new Thread(runnable);
+            thread.start();
+        } catch (IllegalThreadStateException e){
+
+        }
     }
 
     public void setAllSongs() {
@@ -312,7 +323,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), false, seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
-                    shouldContinue = true;
 //                    thread = new Thread(runnable);
 //                    thread.start();
                 } else {
@@ -326,10 +336,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), false, seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
-                    shouldContinue = true;
-                    thread = new Thread(runnable);
-                    thread.start();
-
                 } else {
                     btn_playpause.Pause();
                     btn_playpausePanel.Pause();
@@ -365,7 +371,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             seekBar.setEnabled(true);
             seekBar.setMax((Integer.parseInt(songDetail.get(SONG_DURATION))));
 //            seekBar.setProgress(0);
-            shouldContinue = true;
 //            txt_timeprogress.setText("0:00");
             if (seeking) {
 //                thread = new Thread(runnable);
@@ -442,8 +447,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onBackPressed() {
         if (mLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
             mLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-        } else super.onBackPressed();
-
+        } else if(SongService.isPlaying()){
+            super.onBackPressed();
+        } else {
+            PlaybackManager.stopService();
+            super.onBackPressed();
+            finish();
+        }
     }
 
     public void setPlayPauseView(boolean isPlaying) {

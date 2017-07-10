@@ -30,7 +30,7 @@ public class SongService extends Service {
     public final static String ACTION_STOP = "STOP";
     public final static String ACTION_SEEK = "SEEK_TO";
     public final static String UPDATE_NOTIF = "updateNotif";
-    private static AudioManager audioManager;
+    private AudioManager audioManager;
     private static MediaPlayer player;
     private static Context mContext;
     String data = "", title = "", artist = "", album = "";
@@ -151,12 +151,14 @@ public class SongService extends Service {
 
     @Override
     public void onDestroy() {
+        PlaybackManager.isFirstLoad = true;
         PlaybackManager.goAhead = true;
         player.stop();
         player.release();
         player = null;
         unregisterReceiver(receiver);
         notificationHandler.onServiceDestroy();
+        audioManager.abandonAudioFocus(focusChangeListener);
         PlaybackManager.onStopService();
     }
 
@@ -192,6 +194,8 @@ public class SongService extends Service {
                         } catch (IllegalStateException e){
                             PlaybackManager.goAhead = true;
                             e.printStackTrace();
+                        } catch (RuntimeException e){
+                            e.printStackTrace();
                         }
                         PlaybackManager.goAhead = true;
                         mediaPlayerListener.onMediaPlayerStarted(player);
@@ -216,7 +220,6 @@ public class SongService extends Service {
                         mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case ACTION_STOP:
-                        audioManager = null;
                         Log.d("AudioFocus", "State: "+result);
                         if (player != null) {
                             stopSelf();
@@ -245,6 +248,10 @@ public class SongService extends Service {
                                     notificationHandler.showNotif(title, artist, album, true);
                                 }
                             } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch(IllegalStateException e){
+                                e.printStackTrace();
+                            } catch (RuntimeException e){
                                 e.printStackTrace();
                             }
                         }

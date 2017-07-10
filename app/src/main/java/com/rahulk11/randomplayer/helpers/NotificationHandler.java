@@ -63,12 +63,8 @@ public class NotificationHandler extends Notification {
     private static NotificationHandler notificationHandler = null;
 
     public static NotificationHandler getInstance(Context ctx1) {
-        if (notificationHandler != null)
-            return notificationHandler;
-        else {
-            notificationHandler = new NotificationHandler(ctx1);
-            return notificationHandler;
-        }
+        notificationHandler = new NotificationHandler(ctx1);
+        return notificationHandler;
     }
 
     public void showNotif(String title1, String artist1, String album1, final boolean isPlay) {
@@ -280,6 +276,7 @@ public class NotificationHandler extends Notification {
     public void onServiceDestroy() {
         title = "";
         mNotificationManager.cancel(notifID);
+        mNotificationManager = null;
         notificationHandler = null;
     }
 

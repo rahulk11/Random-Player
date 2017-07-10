@@ -26,7 +26,7 @@ public class PlaybackManager {
             MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA, MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DURATION};
     private String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
-    public static ArrayList<HashMap<String, String>> songsList = new ArrayList<HashMap<String, String>>();
+    public static ArrayList<HashMap<String, String>> songsList = new ArrayList<>();
     public static ArrayList<Integer> shufflePosList = new ArrayList<>();
     public static final String songPref = "songPref";
     private static Context mContext;
@@ -147,7 +147,6 @@ public class PlaybackManager {
             return false;
         } else {
             if(isResume){
-                ((MainActivity) mContext).setPlayPauseView(true);
                 mContext.startService(
                         new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
                 return true;
@@ -186,7 +185,6 @@ public class PlaybackManager {
             }
         }).start();
         ((MainActivity) mContext).loadSongInfo(hashMap, true);
-        ((MainActivity) mContext).setPlayPauseView(true);
     }
 
     private static void seekTo(final int progress, final HashMap<String, String> hashMap) {
@@ -214,7 +212,6 @@ public class PlaybackManager {
                 }
             }).start();
 //            ((MainActivity) mContext).loadSongInfo(hashMap, true);
-            ((MainActivity) mContext).setPlayPauseView(true);
         }
     }
 
