@@ -1,19 +1,18 @@
 package com.rahulk11.randomplayer.helpers;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
-import android.service.notification.NotificationListenerService;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
 import android.support.v7.graphics.Palette;
 import android.util.DisplayMetrics;
-
-import com.rahulk11.randomplayer.MainActivity;
-import com.rahulk11.randomplayer.SongService;
 
 import java.util.List;
 
@@ -22,7 +21,7 @@ import java.util.List;
  */
 
 public class BitmapPalette {
-    public static Bitmap bitmap;
+    public static Bitmap mediumBitmap, smallBitmap, blurredBitmap;
     public static int dominantRGBColor = Color.DKGRAY,
             dominantTitleTextColor = Color.WHITE,
             dominantBodyTextColor = Color.LTGRAY;
@@ -92,16 +91,22 @@ public class BitmapPalette {
                         mmr.setDataSource(path);
                         byte[] byteData = mmr.getEmbeddedPicture();
                         if (byteData != null) {
-                            bitmap = BitmapPalette.getBitmap(context, byteData, isNotif);
-                        } else bitmap = null;
+                            smallBitmap = BitmapPalette.getBitmap(context, byteData, true);
+                            mediumBitmap = BitmapPalette.getBitmap(context, byteData, false);
+                        } else {
+                            smallBitmap = null;
+                            mediumBitmap = null;
+                        }
                         mmr.release();
                     } catch (RuntimeException e) {
                         e.printStackTrace();
                         mmr.release();
                     }
                 }
-                if(bitmap!=null){
-                    Palette palette = createPaletteSync(bitmap);
+                if(smallBitmap!=null){
+                    blurredBitmap = smallBitmap.copy(smallBitmap.getConfig(), true);
+                    generateBlurredBitmap(context, blurredBitmap);
+                    Palette palette = createPaletteSync(smallBitmap);
                     Palette.Swatch dominantSwatch = checkDominantSwatch(palette);
                     Palette.Swatch vibrantSwatch = checkVibrantSwatch(palette);
                     Palette.Swatch darkVibrantSwatch = checkDarkVibrantSwatch(palette);
@@ -141,6 +146,19 @@ public class BitmapPalette {
 
     }
 
+    private static void generateBlurredBitmap(Context context, Bitmap bitmap){
+        RenderScript rs = RenderScript.create(context);
+
+
+        final Allocation input = Allocation.createFromBitmap(rs, bitmap); //use this constructor for best performance, because it uses USAGE_SHARED mode which reuses memory
+        final Allocation output = Allocation.createTyped(rs, input.getType());
+        final ScriptIntrinsicBlur script = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+        script.setRadius(25f);
+        script.setInput(input);
+        script.forEach(output);
+        output.copyTo(blurredBitmap);
+    }
+
     private static void resetColors(){
         dominantRGBColor = Color.DKGRAY;
         dominantTitleTextColor = Color.WHITE;
@@ -161,7 +179,7 @@ public class BitmapPalette {
 
     public static Bitmap getBitmap(Context context, byte[] byteCoverArt, boolean isNotif) {
 
-        int pixels = isNotif ? calculatePixels(10, context) : calculatePixels(35, context);
+        int pixels = isNotif ? calculatePixels(10, context) : calculatePixels(30, context);
 //        int pixels = calculatePixels(30, context);
 
         BitmapFactory.Options options = new BitmapFactory.Options();

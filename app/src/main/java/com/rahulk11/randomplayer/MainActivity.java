@@ -30,7 +30,9 @@ import com.rahulk11.randomplayer.slidinguppanelhelper.SlidingUpPanelLayout;
 
 import java.util.HashMap;
 
-import static com.rahulk11.randomplayer.helpers.BitmapPalette.bitmap;
+import static com.rahulk11.randomplayer.helpers.BitmapPalette.blurredBitmap;
+import static com.rahulk11.randomplayer.helpers.BitmapPalette.mediumBitmap;
+import static com.rahulk11.randomplayer.helpers.BitmapPalette.smallBitmap;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -44,12 +46,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String ARTIST_NAME = "artistName";
     public static final String SONG_DURATION = "songDuration";
     public static final String SONG_POS = "songPosInList";
+    public static final String SONG_PROGRESS = "songProgress";
     private Toolbar toolbar;
     private ListView lv_songslist;
     private AllSongListAdapter mAllSongsListAdapter;
     private SlidingUpPanelLayout mLayout;
     private ImageView songAlbumbg, img_bottom_slideone, img_bottom_slidetwo,
-            imgbtn_backward, imgbtn_forward;
+            imgbtn_backward, imgbtn_forward, ivListBG;
     private PlayPauseView btn_playpause, btn_playpausePanel;
     private TextView txt_timeprogress, txt_timetotal, txt_playesongname,
             txt_songartistname, txt_playesongname_slidetoptwo, txt_songartistname_slidetoptwo;
@@ -121,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lv_songslist = (ListView) findViewById(R.id.recycler_allSongs);
         mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         songAlbumbg = (ImageView) findViewById(R.id.image_songAlbumbg_mid);
+        ivListBG = (ImageView) findViewById(R.id.iv_lvBG);
         img_bottom_slideone = (ImageView) findViewById(R.id.img_bottom_slideone);
         img_bottom_slidetwo = (ImageView) findViewById(R.id.img_bottom_slidetwo);
 
@@ -317,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (v.getId()) {
             case R.id.bottombar_play:
-                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), false, seekBar.getProgress())) {
+                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), true, seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
 //                    thread = new Thread(runnable);
@@ -331,7 +335,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.btn_play:
-                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), false, seekBar.getProgress())) {
+                if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), true, seekBar.getProgress())) {
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                 } else {
@@ -361,15 +365,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String artist = songDetail.get(ARTIST_NAME);
         String path = songDetail.get(SONG_PATH);
         int milliSecDuration = Integer.parseInt(songDetail.get(SONG_DURATION));
+        String progress = songDetail.get(SONG_PROGRESS);
+        int milliSecProgress = Integer.parseInt(progress==null? "0" : progress);
         if (txt_playesongname != null) {
             txt_playesongname.setText(title);
             txt_playesongname_slidetoptwo.setText(title);
             txt_songartistname.setText(artist);
             txt_songartistname_slidetoptwo.setText(artist);
             txt_timetotal.setText(calculateDuration(milliSecDuration));
+            txt_timeprogress.setText(calculateDuration(milliSecProgress));
             seekBar.setEnabled(true);
             if (seeking) {
                 setSeekProgress(SongService.getCurrPos(), SongService.getDuration());
+            } else {
+                seekBar.setMax(milliSecDuration);
+                seekBar.setProgress(milliSecProgress);
             }
         }
         try {
@@ -382,10 +392,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void setBitmapColors() {
         if (songAlbumbg != null) {
-            if (bitmap != null) {
-                songAlbumbg.setImageBitmap(bitmap);
-                img_bottom_slideone.setImageBitmap(bitmap);
-                img_bottom_slidetwo.setImageBitmap(bitmap);
+            if (mediumBitmap != null) {
+                ivListBG.setImageBitmap(blurredBitmap);
+                songAlbumbg.setImageBitmap(mediumBitmap);
+                img_bottom_slideone.setImageBitmap(smallBitmap);
+                img_bottom_slidetwo.setImageBitmap(smallBitmap);
                 toolbar.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
                 toolbar.setTitleTextColor(BitmapPalette.darkVibrantTitleTextColor);
                 slidepanelchildtwo_topviewone.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
@@ -445,6 +456,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             if(PlaybackManager.isServiceRunning)
                 PlaybackManager.stopService();
+
             super.onBackPressed();
             finish();
         }

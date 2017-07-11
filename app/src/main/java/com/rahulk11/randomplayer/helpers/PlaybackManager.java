@@ -149,32 +149,32 @@ public class PlaybackManager {
         isFirstLoad = true;
         isManuallyPaused = false;
 
-        BitmapPalette.bitmap.recycle();
+        if(BitmapPalette.smallBitmap!=null){
+            BitmapPalette.smallBitmap.recycle();
+            BitmapPalette.mediumBitmap.recycle();
+        }
     }
 
     public static boolean playPauseEvent(boolean headphone, boolean isPlaying, boolean isResume, int seekProgress) {
+        HashMap<String, String> hashMap = getPlayingSongPref();
         if (headphone || isPlaying) {
             goAhead = false;
             ((MainActivity) mContext).setPlayPauseView(false);
             mContext.startService(
                     new Intent(mContext, SongService.class).setAction(SongService.ACTION_PAUSE));
+            hashMap.put(MainActivity.SONG_PROGRESS, ""+SongService.getCurrPos());
+            setPlayingSongPref(hashMap);
             return false;
         } else {
             isManuallyPaused = false;
-            if(isResume){
-                mContext.startService(
-                        new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
-                return true;
-            }else {
-                HashMap<String, String> hashMap = getPlayingSongPref();
-                if (hashMap!=null && !hashMap.get(MainActivity.SONG_ID).equals("")) {
-                    if (seekProgress != -1)
-                        seekTo(seekProgress, hashMap);
-                    else playSong(hashMap);
+            if (hashMap!=null && !hashMap.get(MainActivity.SONG_ID).equals("")) {
+                if (seekProgress != -1)
+                    seekTo(seekProgress, isResume, hashMap);
+                else playSong(hashMap);
                     return true;
-                }
             }
         }
+        hashMap.clear();
         return false;
     }
 
@@ -203,7 +203,7 @@ public class PlaybackManager {
         ((MainActivity) mContext).loadSongInfo(hashMap, true);
     }
 
-    private static void seekTo(final int progress, final HashMap<String, String> hashMap) {
+    private static void seekTo(final int progress, final boolean resume, final HashMap<String, String> hashMap) {
         if (goAhead) {
             goAhead = false;
             new Thread(new Runnable() {
@@ -218,7 +218,7 @@ public class PlaybackManager {
                     }
                     i.setAction(SongService.ACTION_SEEK);
                     i.putExtra("seekTo", progress);
-                    if(progress==0) i.putExtra("resume", true);
+                    if(resume) i.putExtra("resume", true);
                     else i.putExtra("resume", false);
                     mContext.startService(i);
                     int pos = Integer.parseInt(hashMap.get(MainActivity.SONG_POS));
@@ -292,7 +292,8 @@ public class PlaybackManager {
                         .putString(MainActivity.ALBUM_NAME, songDetail.get(MainActivity.ALBUM_NAME))
                         .putString(MainActivity.SONG_DURATION, songDetail.get(MainActivity.SONG_DURATION))
                         .putString(MainActivity.SONG_PATH, songDetail.get(MainActivity.SONG_PATH))
-                        .putString(MainActivity.SONG_POS, songDetail.get(MainActivity.SONG_POS));
+                        .putString(MainActivity.SONG_POS, songDetail.get(MainActivity.SONG_POS))
+                        .putString(MainActivity.SONG_PROGRESS, songDetail.get(MainActivity.SONG_PROGRESS));
 
                 prefEditor.commit();
             }
@@ -309,6 +310,7 @@ public class PlaybackManager {
             hashMap.put(MainActivity.SONG_DURATION, sharedPref.getString(MainActivity.SONG_DURATION, "" + 0));
             hashMap.put(MainActivity.SONG_PATH, sharedPref.getString(MainActivity.SONG_PATH, ""));
             hashMap.put(MainActivity.SONG_POS, sharedPref.getString(MainActivity.SONG_POS, -1 + ""));
+            hashMap.put(MainActivity.SONG_PROGRESS, sharedPref.getString(MainActivity.SONG_PROGRESS, 0 + ""));
         }
         return hashMap;
     }

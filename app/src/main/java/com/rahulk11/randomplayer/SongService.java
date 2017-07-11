@@ -51,7 +51,7 @@ public class SongService extends Service {
             if (mp != null && !mp.isPlaying() && PlaybackManager.goAhead) {
                 PlaybackManager.playNext(true);
             } else {
-                PlaybackManager.playPauseEvent(false, false, true, mp.getCurrentPosition());
+                PlaybackManager.playPauseEvent(false, false, false, mp.getCurrentPosition());
             }
         }
     };
@@ -65,7 +65,7 @@ public class SongService extends Service {
                     player.setVolume(0.2f, 0.2f);
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT):
-                    PlaybackManager.playPauseEvent(false, player.isPlaying(), true, player.getCurrentPosition());
+                    PlaybackManager.playPauseEvent(false, player.isPlaying(), false, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS):
                     if(PlaybackManager.goAhead)
@@ -74,7 +74,7 @@ public class SongService extends Service {
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
                     if(!player.isPlaying() && !PlaybackManager.isManuallyPaused)
-                        PlaybackManager.playPauseEvent(false, false, true, player.getCurrentPosition());
+                        PlaybackManager.playPauseEvent(false, false, false, player.getCurrentPosition());
                     break;
                 default:
                     break;
@@ -91,7 +91,7 @@ public class SongService extends Service {
                 }
             } else if (state == TelephonyManager.CALL_STATE_IDLE) {
                 if (player != null && !player.isPlaying()) {
-                    PlaybackManager.playPauseEvent(false, false, true, player.getCurrentPosition());
+                    PlaybackManager.playPauseEvent(false, false, false, player.getCurrentPosition());
                 }
             } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
                 if (player.isPlaying()) {

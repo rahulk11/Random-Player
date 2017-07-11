@@ -63,7 +63,7 @@ public class UpdateReceiver extends AppWidgetProvider {
                 if(isPlaying){
                     PlaybackManager.isManuallyPaused = true;
                 }
-                PlaybackManager.playPauseEvent(false, isPlaying, true, SongService.getCurrPos());
+                PlaybackManager.playPauseEvent(false, isPlaying, false, SongService.getCurrPos());
                 break;
             case ACTION_NEXT:
                 PlaybackManager.playNext(true);
