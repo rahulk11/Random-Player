@@ -3,30 +3,27 @@ package com.rahulk11.randomplayer.helpers;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.GradientDrawable;
-import android.media.AudioManager;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.view.View;
 import android.widget.RemoteViews;
-import android.support.v7.graphics.Palette;
 
 import com.rahulk11.randomplayer.MainActivity;
 import com.rahulk11.randomplayer.R;
-import com.rahulk11.randomplayer.SongService;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
 
-import static android.content.Context.AUDIO_SERVICE;
+import static com.rahulk11.randomplayer.helpers.UpdateReceiver.ACTION_CLOSE;
+import static com.rahulk11.randomplayer.helpers.UpdateReceiver.ACTION_NEXT;
+import static com.rahulk11.randomplayer.helpers.UpdateReceiver.ACTION_PLAY;
+import static com.rahulk11.randomplayer.helpers.UpdateReceiver.ACTION_PREV;
 
 /**
  * Created by rahul on 6/12/2017.
@@ -36,16 +33,12 @@ public class NotificationHandler extends Notification {
 
     private Context ctx;
     private NotificationManager mNotificationManager;
-    private static final String ACTION_PLAY = "com.rahulk11.randomplayer.ACTION_PLAY";
-    private static final String ACTION_NEXT = "com.rahulk11.randomplayer.ACTION_NEXT";
-    private static final String ACTION_PREV = "com.rahulk11.randomplayer.ACTION_PREV";
-    private static final String ACTION_CLOSE = "com.rahulk11.randomplayer.ACTION_CLOSE";
 
     private static final int notifID = 54388;
     private RemoteViews notificationView, bigNotificationView;
     private Notification notification;
-    private static boolean isOldLayout = false, staticBool = true;
-    ;
+    private boolean isOldLayout = false;
+
     private boolean isFirstTime = true;
     private PendingIntent pendingNotificationIntent;
     private String title = "";
@@ -54,7 +47,7 @@ public class NotificationHandler extends Notification {
     private NotificationHandler(Context ctx1) {
         super();
         ctx = ctx1;
-        staticBool = this.isFirstTime;
+        UpdateReceiver.staticBool = this.isFirstTime;
         mNotificationManager = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         Intent notificationIntent = new Intent(ctx, MainActivity.class);
         pendingNotificationIntent = PendingIntent.getActivity(ctx, 0, notificationIntent, 0);
@@ -63,7 +56,11 @@ public class NotificationHandler extends Notification {
     private static NotificationHandler notificationHandler = null;
 
     public static NotificationHandler getInstance(Context ctx1) {
-        notificationHandler = new NotificationHandler(ctx1);
+        if(notificationHandler!=null){
+
+        }else {
+            notificationHandler = new NotificationHandler(ctx1);
+        }
         return notificationHandler;
     }
 
@@ -306,34 +303,4 @@ public class NotificationHandler extends Notification {
 //        return p;
 //    }
 
-    public static class NotifBtnClickReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            switch (action) {
-                case ACTION_PLAY:
-                    PlaybackManager.playPauseEvent(false, SongService.isPlaying(), true, SongService.getCurrPos());
-                    break;
-                case ACTION_NEXT:
-                    PlaybackManager.playNext(true);
-                    break;
-                case ACTION_PREV:
-                    PlaybackManager.playPrev(true);
-                    break;
-                case ACTION_CLOSE:
-                    notificationHandler.onServiceDestroy();
-                    PlaybackManager.stopService();
-                    break;
-                case Intent.ACTION_HEADSET_PLUG:
-                    //noinspection deprecaRandom Playervition
-                    if (context != null && !staticBool && SongService.isPlaying())
-                        if (!((AudioManager) context.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn()) {
-                            PlaybackManager.playPauseEvent(true, true, false, SongService.getCurrPos());
-                        }
-                    staticBool = false;
-                    break;
-            }
-        }
-    }
 }

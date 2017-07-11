@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -16,6 +15,7 @@ import android.util.Log;
 import com.rahulk11.randomplayer.helpers.Listeners;
 import com.rahulk11.randomplayer.helpers.NotificationHandler;
 import com.rahulk11.randomplayer.helpers.PlaybackManager;
+import com.rahulk11.randomplayer.helpers.UpdateReceiver;
 
 import java.io.IOException;
 
@@ -34,7 +34,7 @@ public class SongService extends Service {
     private static MediaPlayer player;
     private static Context mContext;
     String data = "", title = "", artist = "", album = "";
-    private static NotificationHandler.NotifBtnClickReceiver receiver;
+    private static UpdateReceiver receiver;
     private NotificationHandler notificationHandler;
     private static int result = 11;
 
@@ -73,7 +73,7 @@ public class SongService extends Service {
                     break;
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
-                    if(!player.isPlaying())
+                    if(!player.isPlaying() && !PlaybackManager.isManuallyPaused)
                         PlaybackManager.playPauseEvent(false, false, true, player.getCurrentPosition());
                     break;
                 default:
@@ -106,6 +106,7 @@ public class SongService extends Service {
     public void onCreate() {
         super.onCreate();
         mContext = getApplicationContext();
+        PlaybackManager.isServiceRunning = true;
         notificationHandler = NotificationHandler.getInstance(mContext);
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         player = new MediaPlayer();
@@ -118,7 +119,7 @@ public class SongService extends Service {
                 mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
             }
             IntentFilter receiverFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-            receiver = new NotificationHandler.NotifBtnClickReceiver();
+            receiver = new UpdateReceiver();
             registerReceiver(receiver, receiverFilter);
         } catch (Exception e) {
             Log.e("tmessages", e.toString());
@@ -151,6 +152,7 @@ public class SongService extends Service {
 
     @Override
     public void onDestroy() {
+        PlaybackManager.isServiceRunning = false;
         PlaybackManager.isFirstLoad = true;
         PlaybackManager.goAhead = true;
         player.stop();

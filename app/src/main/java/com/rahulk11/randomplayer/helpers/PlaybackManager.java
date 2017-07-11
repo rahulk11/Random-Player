@@ -26,16 +26,17 @@ public class PlaybackManager {
             MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA, MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DURATION};
     private String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
-    public static ArrayList<HashMap<String, String>> songsList = new ArrayList<>();
-    public static ArrayList<Integer> shufflePosList = new ArrayList<>();
+    public static ArrayList<HashMap<String, String>> songsList;
+    public static ArrayList<Integer> shufflePosList;
     public static final String songPref = "songPref";
     private static Context mContext;
     private static SharedPreferences sharedPref;
-
+    public static boolean isServiceRunning = false, isManuallyPaused = false;
     private static PlaybackManager playbackManager;
 
     private PlaybackManager(Context mContext) {
         this.mContext = mContext;
+        isFirstLoad = true;
         sharedPref = mContext.getSharedPreferences(songPref, mContext.MODE_PRIVATE);
         createPlayList();
     }
@@ -52,8 +53,8 @@ public class PlaybackManager {
 
     public static PlaybackManager getInstance(Context mContext) {
         playbackManager = null;
-        songsList.clear();
-        shufflePosList.clear();
+        songsList = new ArrayList<>();
+        shufflePosList = new ArrayList<>();
         goAhead = true;
         playbackManager = new PlaybackManager(mContext);
         return playbackManager;
@@ -134,8 +135,21 @@ public class PlaybackManager {
                 new Intent(mContext, SongService.class).setAction(SongService.ACTION_STOP));
     }
 
-    public static void onStopService(){
+    public static void onStopService() {
         ((MainActivity) mContext).setPlayPauseView(false);
+        shufflePosList.clear();
+        songsList.clear();
+        songsList = null;
+        shufflePosList = null;
+        sharedPref = null;
+
+        playbackManager = null;
+        mContext = null;
+        isServiceRunning = false;
+        isFirstLoad = true;
+        isManuallyPaused = false;
+
+        BitmapPalette.bitmap.recycle();
     }
 
     public static boolean playPauseEvent(boolean headphone, boolean isPlaying, boolean isResume, int seekProgress) {
@@ -146,6 +160,7 @@ public class PlaybackManager {
                     new Intent(mContext, SongService.class).setAction(SongService.ACTION_PAUSE));
             return false;
         } else {
+            isManuallyPaused = false;
             if(isResume){
                 mContext.startService(
                         new Intent(mContext, SongService.class).setAction(SongService.ACTION_RESUME));
@@ -167,6 +182,7 @@ public class PlaybackManager {
 
     public static void playSong(final HashMap<String, String> hashMap) {
         goAhead = false;
+        isManuallyPaused = false;
         setPlayingSongPref(hashMap);
         new Thread(new Runnable() {
             @Override
@@ -256,7 +272,7 @@ public class PlaybackManager {
     }
 
     public static void mediaPlayerStarted(MediaPlayer mp){
-        ((MainActivity) mContext).setSeekProgress(mp.getCurrentPosition());
+        ((MainActivity) mContext).setSeekProgress(mp.getCurrentPosition(), mp.getDuration());
     }
 
     public static void showNotif(){

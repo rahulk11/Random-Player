@@ -2,4 +2,7 @@
     <string name="app_name"><b>Random Player</b></string>
     <string name="DataBaseName">RandomPlayer</string>
     <string name="DataBaseName_Version">1.0</string>
+    <string name="descBackward">Prev Button</string>
+    <string name="descForward">Next Button</string>
+    <string name="timeProgressDefault">0:00</string>
 </resources>

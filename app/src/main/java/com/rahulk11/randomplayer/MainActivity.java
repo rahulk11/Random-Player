@@ -4,15 +4,11 @@ import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.View;
@@ -26,10 +22,10 @@ import android.widget.TextView;
 
 import com.rahulk11.randomplayer.helpers.AllSongListAdapter;
 import com.rahulk11.randomplayer.helpers.BitmapPalette;
-import com.rahulk11.randomplayer.helpers.PlaybackManager;
-import com.rahulk11.randomplayer.slidingtabhelper.ViewPagerAdapter;
-import com.rahulk11.randomplayer.slidingtabhelper.SlidingTabLayout;
 import com.rahulk11.randomplayer.helpers.PlayPauseView;
+import com.rahulk11.randomplayer.helpers.PlaybackManager;
+import com.rahulk11.randomplayer.slidingtabhelper.SlidingTabLayout;
+import com.rahulk11.randomplayer.slidingtabhelper.ViewPagerAdapter;
 import com.rahulk11.randomplayer.slidinguppanelhelper.SlidingUpPanelLayout;
 
 import java.util.HashMap;
@@ -292,8 +288,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    public void setSeekProgress(final int progress){
+    public void setSeekProgress(final int progress, final int duration){
         shouldContinue = true;
+        seekBar.setMax(duration);
         seekBar.setProgress(progress);
         runOnUiThread(new Runnable() {
             @Override
@@ -326,6 +323,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                    thread = new Thread(runnable);
 //                    thread.start();
                 } else {
+                    PlaybackManager.isManuallyPaused = true;
                     btn_playpause.Pause();
                     btn_playpausePanel.Pause();
                     shouldContinue = false;
@@ -337,6 +335,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     btn_playpause.Play();
                     btn_playpausePanel.Play();
                 } else {
+                    PlaybackManager.isManuallyPaused = true;
                     btn_playpause.Pause();
                     btn_playpausePanel.Pause();
                     shouldContinue = false;
@@ -369,12 +368,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             txt_songartistname_slidetoptwo.setText(artist);
             txt_timetotal.setText(calculateDuration(milliSecDuration));
             seekBar.setEnabled(true);
-            seekBar.setMax((Integer.parseInt(songDetail.get(SONG_DURATION))));
-//            seekBar.setProgress(0);
-//            txt_timeprogress.setText("0:00");
             if (seeking) {
-//                thread = new Thread(runnable);
-//                thread.start();
+                setSeekProgress(SongService.getCurrPos(), SongService.getDuration());
             }
         }
         try {
@@ -429,7 +424,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onPause() {
-        shouldContinue = false;
         super.onPause();
     }
 
@@ -438,8 +432,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
         if (playbackManager != null) {
             loadSongInfo(PlaybackManager.getPlayingSongPref(), SongService.isPlaying());
-            if(SongService.isPlaying())
-                playbackManager.playPauseEvent(false, false, true, SongService.getCurrPos());
+            setPlayPauseView(SongService.isPlaying());
         } else initPlaybackManager();
     }
 
@@ -450,7 +443,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if(SongService.isPlaying()){
             super.onBackPressed();
         } else {
-            PlaybackManager.stopService();
+            if(PlaybackManager.isServiceRunning)
+                PlaybackManager.stopService();
             super.onBackPressed();
             finish();
         }
