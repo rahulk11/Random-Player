@@ -459,7 +459,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
-        if(PlaybackManager.isServiceRunning)
+        if(PlaybackManager.isServiceRunning && !SongService.isPlaying())
             PlaybackManager.stopService();
         super.onDestroy();
     }
