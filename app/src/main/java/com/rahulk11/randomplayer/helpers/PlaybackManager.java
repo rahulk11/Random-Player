@@ -235,7 +235,8 @@ public class PlaybackManager {
         if (goAhead) {
             goAhead = false;
             MainActivity.shouldContinue = false;
-            int pos = Integer.parseInt(getPlayingSongPref().get(MainActivity.SONG_POS));
+            String lastPos = getPlayingSongPref().get(MainActivity.SONG_POS);
+            int pos = Integer.parseInt((lastPos==null)? "0":lastPos);
             if (isShuffle) {
                 if (shufflePosList.contains(pos)) {
                     int index = shufflePosList.indexOf(pos);

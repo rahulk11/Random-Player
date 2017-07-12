@@ -298,7 +298,8 @@ public class NotificationHandler extends Notification {
 
     public void onServiceDestroy() {
         title = "";
-        mNotificationManager.cancel(notifID);
+        if(mNotificationManager!=null)
+            mNotificationManager.cancel(notifID);
         mNotificationManager = null;
         notificationHandler = null;
     }

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -259,56 +260,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
     }
-
+    private Handler seekHandler = new Handler();
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            int currSeekPos = seekBar.getProgress();
+            int currSeekPos = SongService.getCurrPos();
             int max = seekBar.getMax();
             if(currSeekPos>max){
                 currSeekPos = 0;
             }
-            seekBar.setProgress(currSeekPos);
-            while (currSeekPos < max && shouldContinue) {
-                try {
-                    Thread.sleep(1000);
-                    currSeekPos = SongService.getCurrPos();
-                    final int finalCurrSeekPos = currSeekPos;
-                    if(finalCurrSeekPos<max){
-                        seekBar.setProgress(currSeekPos);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                txt_timeprogress.setText(calculateDuration(finalCurrSeekPos));
-                            }
-                        });
-                    }
-                } catch (InterruptedException e) {
-                    return;
-                } catch (Exception e) {
-                    return;
-                }
+            if(shouldContinue){
+                seekBar.setProgress(currSeekPos);
+                txt_timeprogress.setText(calculateDuration(currSeekPos));
+                seekHandler.postDelayed(runnable, 1000);
             }
+//            seekBar.setProgress(currSeekPos);
+//            while (currSeekPos < max && shouldContinue) {
+//                try {
+//                    Thread.sleep(1000);
+//                    currSeekPos = SongService.getCurrPos();
+//                    final int finalCurrSeekPos = currSeekPos;
+//                    if(finalCurrSeekPos<max){
+//                        seekBar.setProgress(currSeekPos);
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                txt_timeprogress.setText(calculateDuration(finalCurrSeekPos));
+//                            }
+//                        });
+//                    }
+//                } catch (InterruptedException e) {
+//                    return;
+//                } catch (Exception e) {
+//                    return;
+//                }
+//            }
         }
     };
 
     public void setSeekProgress(final int progress, final int duration){
+        seekHandler.removeCallbacks(runnable);
         shouldContinue = true;
-        seekBar.setMax(duration);
+        if(duration!=seekBar.getMax())
+            seekBar.setMax(duration);
         seekBar.setProgress(progress);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                setPlayPauseView(true);
-                txt_timeprogress.setText(calculateDuration(progress));
-            }
-        });
-        try{
-            thread = new Thread(runnable);
-            thread.start();
-        } catch (IllegalThreadStateException e){
-
-        }
+        runOnUiThread(runnable);
+        setPlayPauseView(true);
     }
 
     public void setAllSongs() {
@@ -454,12 +451,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if(SongService.isPlaying()){
             super.onBackPressed();
         } else {
-            if(PlaybackManager.isServiceRunning)
-                PlaybackManager.stopService();
-
             super.onBackPressed();
             finish();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(PlaybackManager.isServiceRunning)
+            PlaybackManager.stopService();
+        super.onDestroy();
     }
 
     public void setPlayPauseView(boolean isPlaying) {

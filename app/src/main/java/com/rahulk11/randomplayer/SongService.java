@@ -23,7 +23,7 @@ import java.io.IOException;
  * Created by rahul on 6/9/2017.
  */
 
-public class SongService extends Service {
+public class SongService extends Service implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener {
     public final static String ACTION_PLAY = "PLAY";
     public final static String ACTION_PAUSE = "PAUSE";
     public final static String ACTION_RESUME = "RESUME";
@@ -34,25 +34,16 @@ public class SongService extends Service {
     private static MediaPlayer player;
     private static Context mContext;
     String data = "", title = "", artist = "", album = "";
+    int seekTo = -1;
     private static UpdateReceiver receiver;
     private NotificationHandler notificationHandler;
     private static int result = 11;
+    private boolean isMediaPlayerReset = false;
 
     private Listeners.MediaPlayerListener mediaPlayerListener = new Listeners.MediaPlayerListener() {
         @Override
         public void onMediaPlayerStarted(MediaPlayer mp) {
             PlaybackManager.mediaPlayerStarted(mp);
-        }
-    };
-
-    private MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
-        @Override
-        public void onCompletion(MediaPlayer mp) {
-            if (mp != null && !mp.isPlaying() && PlaybackManager.goAhead) {
-                PlaybackManager.playNext(true);
-            } else {
-                PlaybackManager.playPauseEvent(false, false, false, mp.getCurrentPosition());
-            }
         }
     };
 
@@ -68,12 +59,12 @@ public class SongService extends Service {
                     PlaybackManager.playPauseEvent(false, player.isPlaying(), false, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_LOSS):
-                    if(PlaybackManager.goAhead)
+                    if (PlaybackManager.goAhead)
                         PlaybackManager.playPauseEvent(false, true, false, player.getCurrentPosition());
                     break;
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
-                    if(!player.isPlaying() && !PlaybackManager.isManuallyPaused)
+                    if (!player.isPlaying() && !PlaybackManager.isManuallyPaused)
                         PlaybackManager.playPauseEvent(false, false, false, player.getCurrentPosition());
                     break;
                 default:
@@ -110,7 +101,8 @@ public class SongService extends Service {
         notificationHandler = NotificationHandler.getInstance(mContext);
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         player = new MediaPlayer();
-        player.setOnCompletionListener(onCompletionListener);
+        player.setOnCompletionListener(this);
+        player.setOnPreparedListener(this);
 
         try {
             TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
@@ -147,7 +139,7 @@ public class SongService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
-        onDestroy();
+        stopSelf();
     }
 
     @Override
@@ -155,12 +147,17 @@ public class SongService extends Service {
         PlaybackManager.isServiceRunning = false;
         PlaybackManager.isFirstLoad = true;
         PlaybackManager.goAhead = true;
-        player.stop();
-        player.release();
-        player = null;
-        unregisterReceiver(receiver);
-        notificationHandler.onServiceDestroy();
-        audioManager.abandonAudioFocus(focusChangeListener);
+        if(player!=null){
+            player.stop();
+            player.release();
+            player = null;
+        }
+        if(receiver!=null)
+            unregisterReceiver(receiver);
+        if(notificationHandler!=null)
+            notificationHandler.onServiceDestroy();
+        if(audioManager!=null)
+            audioManager.abandonAudioFocus(focusChangeListener);
         PlaybackManager.onStopService();
     }
 
@@ -181,26 +178,25 @@ public class SongService extends Service {
                         artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
                         album = intent.getStringExtra(MainActivity.ALBUM_NAME);
                         try {
+                            isMediaPlayerReset = true;
                             player.reset();
                             player.setDataSource(data);
                             result = audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
                                     AudioManager.AUDIOFOCUS_GAIN);
                             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                                player.prepare();
-                                player.start();
-                                notificationHandler.showNotif(title, artist, album, true);
+                                player.prepareAsync();
                             }
                         } catch (IOException e) {
                             PlaybackManager.goAhead = true;
                             e.printStackTrace();
-                        } catch (IllegalStateException e){
+                        } catch (IllegalStateException e) {
                             PlaybackManager.goAhead = true;
                             e.printStackTrace();
-                        } catch (RuntimeException e){
+                        } catch (RuntimeException e) {
                             e.printStackTrace();
                         }
                         PlaybackManager.goAhead = true;
-                        mediaPlayerListener.onMediaPlayerStarted(player);
+//                        mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case ACTION_PAUSE:
                         if (player.isPlaying()) {
@@ -222,14 +218,14 @@ public class SongService extends Service {
                         mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case ACTION_STOP:
-                        Log.d("AudioFocus", "State: "+result);
+                        Log.d("AudioFocus", "State: " + result);
                         if (player != null) {
                             stopSelf();
                         }
                         PlaybackManager.goAhead = true;
                         break;
                     case ACTION_SEEK:
-                        final int seekTo = intent.getIntExtra("seekTo", 0);
+                        seekTo = intent.getIntExtra("seekTo", -1);
                         data = intent.getStringExtra(MainActivity.SONG_PATH);
                         title = intent.getStringExtra(MainActivity.SONG_TITLE);
                         artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
@@ -241,24 +237,31 @@ public class SongService extends Service {
                                         AudioManager.AUDIOFOCUS_GAIN);
                                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                                     if (!android.text.TextUtils.isEmpty(data) && resume) {
+                                        isMediaPlayerReset = true;
                                         player.reset();
                                         player.setDataSource(data);
-                                        player.prepare();
+                                        player.prepareAsync();
+                                    } else if(seekTo!=-1){
+                                        player.start();
+                                        player.seekTo(seekTo);
+                                        seekTo = -1;
+                                        mediaPlayerListener.onMediaPlayerStarted(player);
+                                    } else {
+                                        player.start();
+                                        mediaPlayerListener.onMediaPlayerStarted(player);
+                                        notificationHandler.showNotif(title, artist, album, true);
                                     }
-                                    player.seekTo(seekTo);
-                                    player.start();
-                                    notificationHandler.showNotif(title, artist, album, true);
+//                                    notificationHandler.showNotif(title, artist, album, true);
                                 }
                             } catch (IOException e) {
                                 e.printStackTrace();
-                            } catch(IllegalStateException e){
+                            } catch (IllegalStateException e) {
                                 e.printStackTrace();
-                            } catch (RuntimeException e){
+                            } catch (RuntimeException e) {
                                 e.printStackTrace();
                             }
                         }
                         PlaybackManager.goAhead = true;
-                        mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case UPDATE_NOTIF:
                         notificationHandler.updateNotif(title, artist, album, player.isPlaying());
@@ -288,4 +291,26 @@ public class SongService extends Service {
         return 0;
     }
 
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        if (isMediaPlayerReset) {
+            isMediaPlayerReset = false;
+            return;
+        } else if (mp != null && !mp.isPlaying() && PlaybackManager.goAhead) {
+            PlaybackManager.playNext(true);
+        } else {
+            PlaybackManager.playPauseEvent(false, false, false, mp.getCurrentPosition());
+        }
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        isMediaPlayerReset = false;
+        player.start();
+        if(seekTo!=-1)
+            player.seekTo(seekTo);
+        seekTo = -1;
+        notificationHandler.showNotif(title, artist, album, true);
+        mediaPlayerListener.onMediaPlayerStarted(player);
+    }
 }

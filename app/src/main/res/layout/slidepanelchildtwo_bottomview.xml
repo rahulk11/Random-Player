@@ -15,39 +15,44 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:gravity="center"
             android:layout_gravity="bottom"
-            android:paddingLeft="6dp"
-            android:paddingRight="6dp">
+            android:layout_margin="4dp"
+            android:weightSum="1">
 
 
                 <TextView
                     android:id="@+id/slidepanel_time_progress"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:paddingLeft="4dp"
-                    android:paddingRight="6dp"
-                    android:maxLines="1"
-                    android:text="@string/timeProgressDefault"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp" />
-
-                <SeekBar
-                    android:id="@+id/seekbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-
-
-                <TextView
-                    android:id="@+id/slidepanel_time_total"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="6dp"
+                    android:layout_weight="0.15"
+                    android:paddingLeft="2dp"
                     android:paddingRight="4dp"
                     android:maxLines="1"
                     android:text="@string/timeProgressDefault"
                     android:textColor="@android:color/white"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:gravity="center"/>
+
+                <SeekBar
+                    android:id="@+id/seekbar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.7"/>
+
+
+                <TextView
+                    android:id="@+id/slidepanel_time_total"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.15"
+                    android:paddingLeft="4dp"
+                    android:paddingRight="2dp"
+                    android:maxLines="1"
+                    android:text="@string/timeProgressDefault"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:gravity="center"/>
 
         </LinearLayout>
 
