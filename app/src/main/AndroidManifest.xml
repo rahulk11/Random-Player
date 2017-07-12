@@ -32,7 +32,7 @@
                 <action android:name="com.rahulk11.randomplayer.ACTION_NEXT" />
                 <action android:name="com.rahulk11.randomplayer.ACTION_PREV" />
                 <action android:name="com.rahulk11.randomplayer.ACTION_CLOSE" />
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />" />
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="android.intent.action.HEADSET_PLUG" />
 
                 <meta-data

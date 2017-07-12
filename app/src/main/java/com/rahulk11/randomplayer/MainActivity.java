@@ -305,7 +305,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             seekBar.setMax(duration);
         seekBar.setProgress(progress);
         runOnUiThread(runnable);
-        setPlayPauseView(true);
+        if(!btn_playpause.isPlay())
+            setPlayPauseView(true);
     }
 
     public void setAllSongs() {
@@ -319,8 +320,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.bottombar_play:
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), true, seekBar.getProgress())) {
-                    btn_playpause.Play();
-                    btn_playpausePanel.Play();
+//                    btn_playpause.Play();
+//                    btn_playpausePanel.Play();
 //                    thread = new Thread(runnable);
 //                    thread.start();
                 } else {
@@ -333,8 +334,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.btn_play:
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), true, seekBar.getProgress())) {
-                    btn_playpause.Play();
-                    btn_playpausePanel.Play();
+//                    btn_playpause.Play();
+//                    btn_playpausePanel.Play();
                 } else {
                     PlaybackManager.isManuallyPaused = true;
                     btn_playpause.Pause();

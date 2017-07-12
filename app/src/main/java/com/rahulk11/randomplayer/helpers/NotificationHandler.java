@@ -74,6 +74,7 @@ public class NotificationHandler extends Notification {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         notification.bigContentView = bigNotificationView;
                     }
+                    notification.priority = PRIORITY_MAX;
                     mNotificationManager.notify(notifID, notification);
                 }
             }).start();
@@ -137,6 +138,7 @@ public class NotificationHandler extends Notification {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     notification.bigContentView = bigNotificationView;
                 }
+                notification.priority = PRIORITY_MAX;
                 mNotificationManager.notify(notifID, notification);
             }
         }).start();
