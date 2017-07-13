@@ -300,6 +300,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
 
     public void setSeekProgress() {
+        if(!seekBar.isEnabled())
+            seekBar.setEnabled(true);
         seekHandler.removeCallbacks(runnable);
         shouldContinue = true;
 //        if (duration != seekBar.getMax())
@@ -448,6 +450,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (playbackManager != null) {
             loadSongInfo(PlaybackManager.getPlayingSongPref(), SongService.isPlaying());
             setPlayPauseView(SongService.isPlaying());
+            if(!SongService.isPlaying())
+                seekBar.setEnabled(false);
         } else initPlaybackManager();
     }
 
