@@ -76,7 +76,7 @@ public class BitmapPalette {
     private static Listeners.LoadImageListener loadImageListener = new Listeners.LoadImageListener() {
         @Override
         public void onImageLoaded() {
-            PlaybackManager.showNotif();
+            PlaybackManager.showNotif(true);
             PlaybackManager.isFirstLoad = false;
         }
     };

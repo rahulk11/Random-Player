@@ -256,22 +256,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
+                PlaybackManager.showNotif(false);
             }
         });
     }
+
     private Handler seekHandler = new Handler();
     Runnable runnable = new Runnable() {
         @Override
         public void run() {
             int currSeekPos = SongService.getCurrPos();
             int max = seekBar.getMax();
-            if(currSeekPos>max){
+            if (currSeekPos > max) {
                 currSeekPos = 0;
             }
-            if(shouldContinue){
-                seekBar.setProgress(currSeekPos);
+            if (shouldContinue) {
                 txt_timeprogress.setText(calculateDuration(currSeekPos));
+                seekBar.setProgress(currSeekPos);
                 seekHandler.postDelayed(runnable, 1000);
             }
 //            seekBar.setProgress(currSeekPos);
@@ -298,15 +299,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    public void setSeekProgress(final int progress, final int duration){
+    public void setSeekProgress() {
         seekHandler.removeCallbacks(runnable);
         shouldContinue = true;
-        if(duration!=seekBar.getMax())
-            seekBar.setMax(duration);
-        seekBar.setProgress(progress);
+//        if (duration != seekBar.getMax())
+//            seekBar.setMax(duration);
+        if (!btn_playpause.isPlay()) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setPlayPauseView(true);
+                }
+            });
+        }
         runOnUiThread(runnable);
-        if(!btn_playpause.isPlay())
-            setPlayPauseView(true);
     }
 
     public void setAllSongs() {
@@ -364,19 +370,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String path = songDetail.get(SONG_PATH);
         int milliSecDuration = Integer.parseInt(songDetail.get(SONG_DURATION));
         String progress = songDetail.get(SONG_PROGRESS);
-        int milliSecProgress = Integer.parseInt(progress==null? "0" : progress);
+        int milliSecProgress = Integer.parseInt(progress == null ? "0" : progress);
         if (txt_playesongname != null) {
             txt_playesongname.setText(title);
             txt_playesongname_slidetoptwo.setText(title);
             txt_songartistname.setText(artist);
             txt_songartistname_slidetoptwo.setText(artist);
             txt_timetotal.setText(calculateDuration(milliSecDuration));
+            seekBar.setMax(milliSecDuration);
             txt_timeprogress.setText(calculateDuration(milliSecProgress));
             seekBar.setEnabled(true);
             if (seeking) {
-                setSeekProgress(SongService.getCurrPos(), SongService.getDuration());
+                setSeekProgress();
             } else {
-                seekBar.setMax(milliSecDuration);
                 seekBar.setProgress(milliSecProgress);
             }
         }
@@ -449,7 +455,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onBackPressed() {
         if (mLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
             mLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
-        } else if(SongService.isPlaying()){
+        } else if (SongService.isPlaying()) {
             super.onBackPressed();
         } else {
             super.onBackPressed();
@@ -459,7 +465,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
-        if(PlaybackManager.isServiceRunning)
+        if (PlaybackManager.isServiceRunning)
             PlaybackManager.stopService();
         super.onDestroy();
     }

@@ -167,7 +167,7 @@ public class PlaybackManager {
             return false;
         } else {
             isManuallyPaused = false;
-            if (hashMap!=null && !hashMap.get(MainActivity.SONG_ID).equals("")) {
+            if (hashMap!=null && hashMap.get(MainActivity.SONG_ID)!=null) {
                 if (seekProgress != -1)
                     seekTo(seekProgress, isResume, hashMap);
                 else playSong(hashMap);
@@ -273,11 +273,12 @@ public class PlaybackManager {
     }
 
     public static void mediaPlayerStarted(MediaPlayer mp){
-        ((MainActivity) mContext).setSeekProgress(mp.getCurrentPosition(), mp.getDuration());
+        ((MainActivity) mContext).setSeekProgress();
     }
 
-    public static void showNotif(){
-        ((MainActivity) mContext).setBitmapColors();
+    public static void showNotif(boolean updateColors){
+        if(updateColors)
+            ((MainActivity) mContext).setBitmapColors();
         if(!isFirstLoad)
             mContext.startService(new Intent(mContext, SongService.class).setAction(SongService.UPDATE_NOTIF));
     }

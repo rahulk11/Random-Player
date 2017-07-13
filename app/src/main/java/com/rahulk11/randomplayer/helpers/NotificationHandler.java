@@ -56,31 +56,31 @@ public class NotificationHandler extends Notification {
     private static NotificationHandler notificationHandler = null;
 
     public static NotificationHandler getInstance(Context ctx1) {
-        if(notificationHandler!=null){
+        if (notificationHandler != null) {
 
-        }else {
+        } else {
             notificationHandler = new NotificationHandler(ctx1);
         }
         return notificationHandler;
     }
 
     public void showNotif(String title1, String artist1, String album1, final boolean isPlay) {
-        if (title1.equalsIgnoreCase(title) && !android.text.TextUtils.isEmpty(title1)) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    playPauseEvent(isPlay);
-                    notification.contentView = notificationView;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                        notification.bigContentView = bigNotificationView;
+            if (title1.equalsIgnoreCase(title) && !android.text.TextUtils.isEmpty(title1)) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        playPauseEvent(isPlay);
+                        notification.contentView = notificationView;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                            notification.bigContentView = bigNotificationView;
+                        }
+                        notification.priority = PRIORITY_MAX;
+                        mNotificationManager.notify(notifID, notification);
                     }
-                    notification.priority = PRIORITY_MAX;
-                    mNotificationManager.notify(notifID, notification);
-                }
-            }).start();
-        } else {
-            songChange(title1, artist1, album1, isPlay);
-        }
+                }).start();
+            } else {
+                songChange(title1, artist1, album1, isPlay);
+            }
     }
 
     public void updateNotif(String title1, String artist1, String album1, boolean isPlay) {
@@ -139,7 +139,8 @@ public class NotificationHandler extends Notification {
                     notification.bigContentView = bigNotificationView;
                 }
                 notification.priority = PRIORITY_MAX;
-                mNotificationManager.notify(notifID, notification);
+                if(mNotificationManager!=null && notification!=null)
+                    mNotificationManager.notify(notifID, notification);
             }
         }).start();
     }
@@ -252,7 +253,7 @@ public class NotificationHandler extends Notification {
     private void setGradientBitmap(int width, int height, int[] colors, boolean isOverlay) {
         Bitmap gradientBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(gradientBitmap);
-        if(isOverlay){
+        if (isOverlay) {
             GradientDrawable gradientDrawable = new GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT, colors);
 
@@ -271,7 +272,7 @@ public class NotificationHandler extends Notification {
                 bigNotificationView.setImageViewBitmap(R.id.fadeOverlay, gradientBigBitmap);
             } else
                 bigNotificationView.setImageViewBitmap(R.id.fadeOverlay, gradientBitmap);
-        } else{
+        } else {
             canvas.drawColor(colors[0]);
             notificationView.setImageViewBitmap(R.id.ivBackground, gradientBitmap);
             bigNotificationView.setImageViewBitmap(R.id.ivBackground, gradientBitmap);
@@ -300,7 +301,7 @@ public class NotificationHandler extends Notification {
 
     public void onServiceDestroy() {
         title = "";
-        if(mNotificationManager!=null)
+        if (mNotificationManager != null)
             mNotificationManager.cancel(notifID);
         mNotificationManager = null;
         notificationHandler = null;

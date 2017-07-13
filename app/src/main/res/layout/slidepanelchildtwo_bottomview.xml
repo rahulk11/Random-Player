@@ -18,6 +18,7 @@
             android:gravity="center"
             android:layout_gravity="bottom"
             android:layout_margin="4dp"
+            android:paddingTop="5dp"
             android:weightSum="1">
 
 

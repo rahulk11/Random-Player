@@ -201,8 +201,8 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
                     case ACTION_PAUSE:
                         if (player.isPlaying()) {
                             player.pause();
-                            notificationHandler.showNotif(title, artist, album, false);
                         }
+                        notificationHandler.showNotif(title, artist, album, false);
                         PlaybackManager.goAhead = true;
                         break;
                     case ACTION_RESUME:
@@ -212,10 +212,10 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
                             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                                 player.start();
                                 notificationHandler.showNotif(title, artist, album, true);
+                                mediaPlayerListener.onMediaPlayerStarted(player);
                             }
                         }
                         PlaybackManager.goAhead = true;
-                        mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case ACTION_STOP:
                         Log.d("AudioFocus", "State: " + result);
@@ -245,11 +245,12 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
                                         player.start();
                                         player.seekTo(seekTo);
                                         seekTo = -1;
+//                                        notificationHandler.showNotif(title, artist, album, true);
                                         mediaPlayerListener.onMediaPlayerStarted(player);
                                     } else {
                                         player.start();
-                                        mediaPlayerListener.onMediaPlayerStarted(player);
                                         notificationHandler.showNotif(title, artist, album, true);
+                                        mediaPlayerListener.onMediaPlayerStarted(player);
                                     }
 //                                    notificationHandler.showNotif(title, artist, album, true);
                                 }
@@ -264,7 +265,7 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
                         PlaybackManager.goAhead = true;
                         break;
                     case UPDATE_NOTIF:
-                        notificationHandler.updateNotif(title, artist, album, player.isPlaying());
+                        notificationHandler.updateNotif(title, artist, album, true);
                         break;
                 }
             }
