@@ -8,7 +8,7 @@
 
     <FrameLayout
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1.5">
 
         <ImageView
@@ -37,21 +37,24 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textSize="15sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif"/>
 
                 <TextView
                     android:id="@+id/songAlbum"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif"/>
 
                 <TextView
                     android:id="@+id/songArtist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif"/>
             </LinearLayout>
 
 
@@ -82,7 +85,8 @@
                     android:background="@android:color/transparent"
                     android:padding="3dp"
                     android:scaleType="centerCrop"
-                    android:src="@android:drawable/ic_media_pause"/>
+                    android:src="@android:drawable/ic_media_pause"
+                    android:visibility="gone"/>
 
                 <ImageButton
                     android:id="@+id/playNotifBtn"
@@ -124,7 +128,7 @@
     <FrameLayout
         android:id="@+id/fl_albumArt"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="0.50">
 
         <ImageView

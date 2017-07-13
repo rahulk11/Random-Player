@@ -3,7 +3,7 @@
  * You should have received a copy of the license in this archive (see LICENSE).
  * Copyright @Dibakar_Mistry, 2015.
  */
-package com.rahulk11.audioplayer.slidinguppanelhelper;
+package com.rahulk11.randomplayer.helpers;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;

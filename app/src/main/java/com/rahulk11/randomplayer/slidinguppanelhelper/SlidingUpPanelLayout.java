@@ -1,4 +1,4 @@
-package com.rahulk11.audioplayer.slidinguppanelhelper;
+package com.rahulk11.randomplayer.slidinguppanelhelper;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -20,7 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.rahulk11.audioplayer.R;
+import com.rahulk11.randomplayer.R;
 
 public class SlidingUpPanelLayout extends ViewGroup {
 
