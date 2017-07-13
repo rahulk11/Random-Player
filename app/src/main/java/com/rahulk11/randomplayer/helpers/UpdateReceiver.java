@@ -2,7 +2,7 @@ package com.rahulk11.randomplayer.helpers;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProvider;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -18,7 +18,7 @@ import static android.content.Context.AUDIO_SERVICE;
  * Created by absolutezero on 10/7/17.
  */
 
-public class UpdateReceiver extends AppWidgetProvider {
+public class UpdateReceiver extends BroadcastReceiver {
     public static final String ACTION_PLAY = "com.rahulk11.randomplayer.ACTION_PLAY";
     public static final String ACTION_NEXT = "com.rahulk11.randomplayer.ACTION_NEXT";
     public static final String ACTION_PREV = "com.rahulk11.randomplayer.ACTION_PREV";
@@ -26,9 +26,12 @@ public class UpdateReceiver extends AppWidgetProvider {
     public static boolean staticBool;
     private static final String WIDGET_CLICK = "WIDGET_CLICK";
 
-    @Override
-    public void onUpdate(Context mContext, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        //super.onUpdate(context, appWidgetManager, appWidgetIds);
+    public void onUpdate(Context mContext) {
+
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(mContext.getApplicationContext());
+        ComponentName thisWidget = new ComponentName(mContext.getApplicationContext(), UpdateReceiver.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
         for (int widgetId : appWidgetIds) {
             // create some random data
             RemoteViews remoteViews = new RemoteViews(mContext.getPackageName(),
@@ -45,7 +48,6 @@ public class UpdateReceiver extends AppWidgetProvider {
                     0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             remoteViews.setOnClickPendingIntent(R.id.songTitle, pendingIntent);
             appWidgetManager.updateAppWidget(widgetId, remoteViews);
-
         }
     }
 
@@ -76,15 +78,9 @@ public class UpdateReceiver extends AppWidgetProvider {
                 PlaybackManager.stopService();
                 break;
             case AppWidgetManager.ACTION_APPWIDGET_UPDATE:
-                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context.getApplicationContext());
-                ComponentName thisWidget = new ComponentName(context.getApplicationContext(), UpdateReceiver.class);
-                int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-                if (appWidgetIds != null && appWidgetIds.length > 0) {
-//                    update(context, appWidgetManager, thisWidget, appWidgetIds);
-                }
+                    onUpdate(context);
                 break;
             case Intent.ACTION_HEADSET_PLUG:
-                //noinspection deprecaRandom Playervition
                 if (context != null && !staticBool && isPlaying)
                     if (!((AudioManager) context.getSystemService(AUDIO_SERVICE)).isWiredHeadsetOn()) {
                         PlaybackManager.playPauseEvent(true, true, false, SongService.getCurrPos());

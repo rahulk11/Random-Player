@@ -14,6 +14,8 @@ import android.renderscript.ScriptIntrinsicBlur;
 import android.support.v7.graphics.Palette;
 import android.util.DisplayMetrics;
 
+import com.rahulk11.randomplayer.R;
+
 import java.util.List;
 
 /**
@@ -103,32 +105,37 @@ public class BitmapPalette {
                         mmr.release();
                     }
                 }
+                if(smallBitmap==null) {
+                    mediumBitmap = BitmapFactory.decodeResource(context.getResources(),
+                            R.drawable.random);
+                    smallBitmap = Bitmap.createScaledBitmap(mediumBitmap, 60, 60, false);
+                }
                 if(smallBitmap!=null){
                     blurredBitmap = smallBitmap.copy(smallBitmap.getConfig(), true);
                     generateBlurredBitmap(context, blurredBitmap);
                     Palette palette = createPaletteSync(smallBitmap);
                     Palette.Swatch dominantSwatch = checkDominantSwatch(palette);
-                    Palette.Swatch vibrantSwatch = checkVibrantSwatch(palette);
+//                    Palette.Swatch vibrantSwatch = checkVibrantSwatch(palette);
                     Palette.Swatch darkVibrantSwatch = checkDarkVibrantSwatch(palette);
-                    Palette.Swatch darkMutedSwatch = checkDarkMutedSwatch(palette);
+//                    Palette.Swatch darkMutedSwatch = checkDarkMutedSwatch(palette);
 
                     dominantRGBColor = dominantSwatch.getRgb();
                     dominantTitleTextColor = dominantSwatch.getTitleTextColor();
                     dominantBodyTextColor = dominantSwatch.getBodyTextColor();
 
-                    vibrantRGBColor = vibrantSwatch.getRgb();
-                    vibrantTitleTextColor = vibrantSwatch.getTitleTextColor();
-                    vibrantBodyTextColor = vibrantSwatch.getBodyTextColor();
-
+//                    vibrantRGBColor = vibrantSwatch.getRgb();
+//                    vibrantTitleTextColor = vibrantSwatch.getTitleTextColor();
+//                    vibrantBodyTextColor = vibrantSwatch.getBodyTextColor();
+//
                     darkVibrantRGBColor = darkVibrantSwatch.getRgb();
                     darkVibrantTitleTextColor = darkVibrantSwatch.getTitleTextColor();
                     darkVibrantBodyTextColor = darkVibrantSwatch.getBodyTextColor();
-
-                    if (darkMutedSwatch != null) {
-                        darkMutedRGBColor = darkMutedSwatch.getRgb();
-                        darkMutedTitleTextColor = darkMutedSwatch.getTitleTextColor();
-                        darkMutedBodyTextColor = darkMutedSwatch.getBodyTextColor();
-                    }
+//
+//                    if (darkMutedSwatch != null) {
+//                        darkMutedRGBColor = darkMutedSwatch.getRgb();
+//                        darkMutedTitleTextColor = darkMutedSwatch.getTitleTextColor();
+//                        darkMutedBodyTextColor = darkMutedSwatch.getBodyTextColor();
+//                    }
                 } else{
                     resetColors();
                 }
