@@ -2,7 +2,6 @@ package com.rahulk11.randomplayer;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,12 +31,12 @@ import com.rahulk11.randomplayer.slidinguppanelhelper.SlidingUpPanelLayout;
 import java.util.HashMap;
 
 import static com.rahulk11.randomplayer.helpers.BitmapPalette.blurredBitmap;
-import static com.rahulk11.randomplayer.helpers.BitmapPalette.mediumBitmap;
+import static com.rahulk11.randomplayer.helpers.BitmapPalette.darkVibrantBodyTextColor;
+import static com.rahulk11.randomplayer.helpers.BitmapPalette.darkVibrantRGBColor;
+import static com.rahulk11.randomplayer.helpers.BitmapPalette.darkVibrantTitleTextColor;
 import static com.rahulk11.randomplayer.helpers.BitmapPalette.smallBitmap;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
-    private static Context mContext;
 
     public static final String SONG_TITLE = "songTitle";
     public static final String DISPLAY_NAME = "displayName";
@@ -48,29 +47,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String SONG_DURATION = "songDuration";
     public static final String SONG_POS = "songPosInList";
     public static final String SONG_PROGRESS = "songProgress";
-    private Toolbar toolbar;
-    private ListView lv_songslist;
-    private AllSongListAdapter mAllSongsListAdapter;
-    private SlidingUpPanelLayout mLayout;
-    private ImageView songAlbumbg, img_bottom_slideone, img_bottom_slidetwo,
-            imgbtn_backward, imgbtn_forward, ivListBG;
-    private PlayPauseView btn_playpause, btn_playpausePanel;
-    private TextView txt_timeprogress, txt_timetotal, txt_playesongname,
-            txt_songartistname, txt_playesongname_slidetoptwo, txt_songartistname_slidetoptwo;
-
-    private RelativeLayout slidepanelchildtwo_topviewone, slidepanelchildtwo_topviewtwo;
-    private LinearLayout llBottomLayout;
-    private boolean isExpand = false;
-    private SharedPreferences sharedPref;
-    private PlaybackManager playbackManager;
-    private SeekBar seekBar;
-    Thread thread;
+    public static boolean shouldContinue = false;
+    private static Context mContext;
     ViewPager pager;
     ViewPagerAdapter adapter;
     SlidingTabLayout tabs;
     CharSequence Titles[] = {"All Songs", "Playlists", "Favourites"};
     int Numboftabs = 3;
-    public static boolean shouldContinue = false;
+    private Toolbar toolbar;
+    private ListView lv_songslist;
+    private AllSongListAdapter mAllSongsListAdapter;
+    private SlidingUpPanelLayout mLayout;
+    private ImageView songAlbumbg, img_bottom_slideone, img_bottom_slidetwo,
+            imgbtn_backward, imgbtn_forward, ivListBG, ivPanelBG;
+    private PlayPauseView btn_playpause, btn_playpausePanel;
+    private TextView txt_timeprogress, txt_timetotal, txt_playesongname,
+            txt_songartistname, txt_playesongname_slidetoptwo, txt_songartistname_slidetoptwo;
+    private RelativeLayout slidepanelchildtwo_topviewone, slidepanelchildtwo_topviewtwo;
+    private LinearLayout llBottomLayout;
+    private boolean isExpand = false;
+    private PlaybackManager playbackManager;
+    private SeekBar seekBar;
+    private Handler seekHandler = new Handler();
+
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (shouldContinue) {
+                int currSeekPos = SongService.getCurrPos();
+                int max = seekBar.getMax();
+                if (currSeekPos > max) {
+                    currSeekPos = 0;
+                }
+
+                txt_timeprogress.setText(calculateDuration(currSeekPos));
+                seekBar.setProgress(currSeekPos);
+                seekHandler.postDelayed(runnable, 1000);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +117,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toolbarStatusBar();
         initListeners();
         initPlaybackManager();
+        if (smallBitmap == null)
+            BitmapPalette.getColorsFromBitmap(mContext, null, false);
     }
 
     private void initPlaybackManager() {
@@ -125,6 +142,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lv_songslist = (ListView) findViewById(R.id.recycler_allSongs);
         mLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
         songAlbumbg = (ImageView) findViewById(R.id.image_songAlbumbg_mid);
+        ivPanelBG = (ImageView) findViewById(R.id.image_songAlbumbg);
         ivListBG = (ImageView) findViewById(R.id.iv_lvBG);
         img_bottom_slideone = (ImageView) findViewById(R.id.img_bottom_slideone);
         img_bottom_slidetwo = (ImageView) findViewById(R.id.img_bottom_slidetwo);
@@ -261,46 +279,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    private Handler seekHandler = new Handler();
-    Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-            int currSeekPos = SongService.getCurrPos();
-            int max = seekBar.getMax();
-            if (currSeekPos > max) {
-                currSeekPos = 0;
-            }
-            if (shouldContinue) {
-                txt_timeprogress.setText(calculateDuration(currSeekPos));
-                seekBar.setProgress(currSeekPos);
-                seekHandler.postDelayed(runnable, 1000);
-            }
-//            seekBar.setProgress(currSeekPos);
-//            while (currSeekPos < max && shouldContinue) {
-//                try {
-//                    Thread.sleep(1000);
-//                    currSeekPos = SongService.getCurrPos();
-//                    final int finalCurrSeekPos = currSeekPos;
-//                    if(finalCurrSeekPos<max){
-//                        seekBar.setProgress(currSeekPos);
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                txt_timeprogress.setText(calculateDuration(finalCurrSeekPos));
-//                            }
-//                        });
-//                    }
-//                } catch (InterruptedException e) {
-//                    return;
-//                } catch (Exception e) {
-//                    return;
-//                }
-//            }
-        }
-    };
-
     public void setSeekProgress() {
-        if(!seekBar.isEnabled())
+        if (!seekBar.isEnabled())
             seekBar.setEnabled(true);
         seekHandler.removeCallbacks(runnable);
         shouldContinue = true;
@@ -324,7 +304,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-
+        seekBar.setEnabled(true);
         switch (v.getId()) {
             case R.id.bottombar_play:
                 if (PlaybackManager.playPauseEvent(false, SongService.isPlaying(), true, seekBar.getProgress())) {
@@ -398,26 +378,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void setBitmapColors() {
         if (songAlbumbg != null) {
-            if (mediumBitmap != null) {
+            if (smallBitmap != null) {
                 ivListBG.setImageBitmap(blurredBitmap);
-                songAlbumbg.setImageBitmap(mediumBitmap);
+                ivPanelBG.setImageBitmap(blurredBitmap);
+                songAlbumbg.setImageBitmap(smallBitmap);
                 img_bottom_slideone.setImageBitmap(smallBitmap);
                 img_bottom_slidetwo.setImageBitmap(smallBitmap);
-                toolbar.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
-                toolbar.setTitleTextColor(BitmapPalette.darkVibrantTitleTextColor);
-                slidepanelchildtwo_topviewone.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
-                slidepanelchildtwo_topviewtwo.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
-                txt_playesongname.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
-                txt_playesongname_slidetoptwo.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
-                txt_songartistname.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
-                txt_songartistname_slidetoptwo.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
-                txt_timetotal.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
-                txt_timeprogress.setTextColor(BitmapPalette.darkVibrantBodyTextColor);
-                llBottomLayout.setBackgroundColor(BitmapPalette.darkVibrantRGBColor);
-            } else {
-                songAlbumbg.setImageResource(R.drawable.random);
-                img_bottom_slideone.setImageResource(R.drawable.random);
-                img_bottom_slidetwo.setImageResource(R.drawable.random);
+                img_bottom_slideone.setBackgroundColor(darkVibrantBodyTextColor);
+                img_bottom_slidetwo.setBackgroundColor(darkVibrantBodyTextColor);
+                toolbar.setBackgroundColor(darkVibrantRGBColor);
+                toolbar.setTitleTextColor(darkVibrantTitleTextColor);
+                slidepanelchildtwo_topviewone.setBackgroundColor(darkVibrantRGBColor);
+                slidepanelchildtwo_topviewtwo.setBackgroundColor(darkVibrantRGBColor);
+                txt_playesongname.setTextColor(darkVibrantBodyTextColor);
+                txt_playesongname_slidetoptwo.setTextColor(darkVibrantBodyTextColor);
+                txt_songartistname.setTextColor(darkVibrantBodyTextColor);
+                txt_songartistname_slidetoptwo.setTextColor(darkVibrantBodyTextColor);
+                txt_timetotal.setTextColor(darkVibrantBodyTextColor);
+                txt_timeprogress.setTextColor(darkVibrantBodyTextColor);
+//                llBottomLayout.setBackgroundColor(darkVibrantRGBColor);
             }
         }
     }
@@ -450,7 +429,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (playbackManager != null) {
             loadSongInfo(PlaybackManager.getPlayingSongPref(), SongService.isPlaying());
             setPlayPauseView(SongService.isPlaying());
-            if(!SongService.isPlaying())
+            if (!SongService.isPlaying())
                 seekBar.setEnabled(false);
         } else initPlaybackManager();
     }
@@ -469,7 +448,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
-        if(PlaybackManager.isServiceRunning && !SongService.isPlaying())
+        if (PlaybackManager.isServiceRunning && !SongService.isPlaying())
             PlaybackManager.stopService();
         super.onDestroy();
     }
