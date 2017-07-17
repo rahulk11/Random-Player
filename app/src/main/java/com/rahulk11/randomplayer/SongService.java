@@ -65,7 +65,7 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
                 case (AudioManager.AUDIOFOCUS_GAIN):
                     player.setVolume(1f, 1f);
                     if (!player.isPlaying() && !PlaybackManager.isManuallyPaused)
-                        PlaybackManager.playPauseEvent(false, false, false, player.getCurrentPosition());
+                        PlaybackManager.playPauseEvent(false, false, true, player.getCurrentPosition());
                     break;
                 default:
                     break;
@@ -97,6 +97,7 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
     public void onCreate() {
         super.onCreate();
         mContext = getApplicationContext();
+        PlaybackManager.isFirstLoad = false;
         PlaybackManager.isServiceRunning = true;
         notificationHandler = NotificationHandler.getInstance(mContext);
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -145,8 +146,6 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
     @Override
     public void onDestroy() {
         PlaybackManager.isServiceRunning = false;
-        PlaybackManager.isFirstLoad = true;
-        PlaybackManager.goAhead = true;
         if(player!=null){
             player.stop();
             player.release();

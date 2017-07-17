@@ -2,15 +2,14 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/dragView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#e0000000">
 
     <ImageView
         android:id="@+id/image_songAlbumbg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:background="#4d000000"
-        android:visibility="invisible"></ImageView>
+        android:scaleType="centerCrop"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,7 +19,8 @@
         android:orientation="vertical"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true">
+        android:layout_alignParentStart="true"
+        android:background="#bb000000">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -47,15 +47,16 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:padding="5dp"
+                android:gravity="center"
                 android:layout_above="@+id/bottom_playLayout">
 
                 <ImageView
                     android:id="@+id/image_songAlbumbg_mid"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_width="260dp"
+                    android:layout_height="340dp"
                     android:src="@drawable/random"
-                    android:scaleType="centerCrop"
-                    android:background="?colorPrimary"
+                    android:scaleType="fitCenter"
                     android:visibility="visible"></ImageView>
 
                 <View
@@ -63,7 +64,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="#4d000000"
-                    android:visibility="invisible" />
+                    android:visibility="gone" />
 
                 <ImageView
                     android:id="@+id/ivLike"
@@ -71,7 +72,7 @@
                     android:layout_height="match_parent"
                     android:scaleType="center"
                     android:background="@mipmap/ic_launcher_round"
-                    android:visibility="invisible" />
+                    android:visibility="gone" />
 
             </RelativeLayout>
 
