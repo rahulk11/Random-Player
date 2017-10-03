@@ -34,9 +34,9 @@ public class AllSongListAdapter extends BaseAdapter {
 
     private Context mContext = null;
     private LayoutInflater layoutInflater;
-    private ArrayList<HashMap<String, String>> sList;
+    private ArrayList<SongData> sList;
 
-    public AllSongListAdapter(Context mContext, ArrayList<HashMap<String, String>> sList) {
+    public AllSongListAdapter(Context mContext, ArrayList<SongData> sList) {
         this.mContext = mContext;
         this.layoutInflater = LayoutInflater.from(mContext);
         this.sList = sList;
@@ -71,14 +71,14 @@ public class AllSongListAdapter extends BaseAdapter {
         String title = "";
         String path = "";
         if (position < sList.size()) {
-            title = sList.get(position).get("songTitle");
-            path = sList.get(position).get("songPath");
+            title = sList.get(position).getSongTitle();
+            path = sList.get(position).getSongPath();
         }
 
         mViewHolder.textViewSongName.setText(title);
         mViewHolder.textViewSongArtisNameAndDuration.setText(((MainActivity) mContext)
-                .calculateDuration(Integer.parseInt(sList.get(position).get("songDuration")))
-                + " | " + sList.get(position).get("artistName"));
+                .calculateDuration(sList.get(position).getSongDur())
+                + " | " + sList.get(position).getSongArtist());
 //        Bitmap bitmap = BitmapPalette.getBitmapFromMediaPath(mContext, path, true);
         mViewHolder.imageSongThm.setImageResource(R.drawable.music);
         mViewHolder.imagemore.setColorFilter(Color.DKGRAY);
@@ -99,39 +99,39 @@ public class AllSongListAdapter extends BaseAdapter {
                     popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
-                            HashMap<String, String> hashmap = PlaybackManager.getPlayingSongPref();
-                            int currSong = Integer.parseInt(hashmap.get(MainActivity.SONG_POS));
+//                            SongData songData = PlaybackManager.getPlayingSongPref();
+//                            int currSong = Integer.parseInt(hashmap.get(MainActivity.SONG_POS));
                             boolean removed = false;
                             switch (item.getItemId()) {
-                                case R.id.playnext:
-                                    while(PlaybackManager.shufflePosList.contains(position)) {
-                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
-                                    }
-                                    if ( PlaybackManager.shufflePosList.contains(currSong)) {
-                                        int currIndex = PlaybackManager.shufflePosList.indexOf(currSong);
-                                        PlaybackManager.shufflePosList.add(currIndex + 1, position);
-                                    }
-                                    break;
-                                case R.id.addtoque:
-                                    while(PlaybackManager.shufflePosList.contains(position)) {
-                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
-                                    }
-                                    if(currSong!=position)
-                                        PlaybackManager.shufflePosList.add(position);
-                                    break;
-//                                case R.id.addtoplaylist:
+//                                case R.id.playnext:
+//                                    while(PlaybackManager.shufflePosList.contains(position)) {
+//                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
+//                                    }
+//                                    if ( PlaybackManager.shufflePosList.contains(currSong)) {
+//                                        int currIndex = PlaybackManager.shufflePosList.indexOf(currSong);
+//                                        PlaybackManager.shufflePosList.add(currIndex + 1, position);
+//                                    }
 //                                    break;
-//                                case R.id.gotoartist:
+//                                case R.id.addtoque:
+//                                    while(PlaybackManager.shufflePosList.contains(position)) {
+//                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
+//                                    }
+//                                    if(currSong!=position)
+//                                        PlaybackManager.shufflePosList.add(position);
 //                                    break;
-//                                case R.id.gotoalbum:
+////                                case R.id.addtoplaylist:
+////                                    break;
+////                                case R.id.gotoartist:
+////                                    break;
+////                                case R.id.gotoalbum:
+////                                    break;
+//                                case R.id.delete:
+//                                    while(PlaybackManager.shufflePosList.contains(position)) {
+//                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
+//                                    }
+//                                    PlaybackManager.songsList.remove(position);
+//                                    notifyDataSetChanged();
 //                                    break;
-                                case R.id.delete:
-                                    while(PlaybackManager.shufflePosList.contains(position)) {
-                                        removed = PlaybackManager.shufflePosList.remove((Integer)position);
-                                    }
-                                    PlaybackManager.songsList.remove(position);
-                                    notifyDataSetChanged();
-                                    break;
                                 default:
                                     break;
                             }

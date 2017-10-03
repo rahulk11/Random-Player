@@ -23,78 +23,52 @@ import java.util.List;
  */
 
 public class BitmapPalette {
-    public static Bitmap smallBitmap, blurredBitmap;
-    public static int dominantRGBColor = Color.DKGRAY,
+    private Bitmap normalBitmap, blurredBitmap;
+    private int dominantRGBColor = Color.DKGRAY,
             dominantTitleTextColor = Color.WHITE,
             dominantBodyTextColor = Color.LTGRAY;
 
-    public static int vibrantRGBColor = Color.TRANSPARENT,
+    private int vibrantRGBColor = Color.TRANSPARENT,
             vibrantTitleTextColor = Color.WHITE,
             vibrantBodyTextColor = Color.LTGRAY;
 
-    public static int darkVibrantRGBColor = Color.TRANSPARENT,
+    private int darkVibrantRGBColor = Color.TRANSPARENT,
             darkVibrantTitleTextColor = Color.WHITE,
             darkVibrantBodyTextColor = Color.LTGRAY;
 
-    public static int darkMutedRGBColor = Color.DKGRAY,
+    private int darkMutedRGBColor = Color.DKGRAY,
             darkMutedTitleTextColor = Color.WHITE,
             darkMutedBodyTextColor = Color.LTGRAY;
-    private static Listeners.LoadImageListener loadImageListener = new Listeners.LoadImageListener() {
-        @Override
-        public void onImageLoaded() {
-            PlaybackManager.showNotif(true);
 
-        }
-    };
+    private Listeners.LoadImageListener loadImageListener;
+    private Context context;
+    private String songPath = "";
+    private boolean isNotif = false;
+    private BitmapPalette bitmapPalette;
 
-    public static Palette createPaletteSync(Bitmap bitmap) {
-        Palette p = Palette.from(bitmap).generate();
-        return p;
+    public BitmapPalette(Context context, Listeners.LoadImageListener loadImageListener) {
+
+        this.context = context;
+        this.loadImageListener = loadImageListener;
+        bitmapPalette = this;
     }
 
-    public static Palette.Swatch checkDominantSwatch(Palette p) {
-        Palette.Swatch vibrant = p.getDominantSwatch();
-        return vibrant;
-    }
-
-    public static Palette.Swatch checkVibrantSwatch(Palette p) {
-        Palette.Swatch vibrant = p.getVibrantSwatch();
-        if (vibrant == null) {
-            return checkDominantSwatch(p);
-        } else return vibrant;
-    }
-
-    public static Palette.Swatch checkDarkVibrantSwatch(Palette p) {
-        Palette.Swatch darkVibrant = p.getDarkVibrantSwatch();
-        if (darkVibrant == null) {
-            return checkVibrantSwatch(p);
-        } else return darkVibrant;
-    }
-
-    public static Palette.Swatch checkDarkMutedSwatch(Palette p) {
-        Palette.Swatch darkMuted = p.getDarkMutedSwatch();
-        return darkMuted;
-    }
-
-    public static List<Palette.Swatch> checkAllSwatches(Palette p) {
-        List<Palette.Swatch> swatchList = p.getSwatches();
-        return swatchList;
-    }
-
-    public static void getColorsFromBitmap(final Context context, final String path, final boolean isNotif) {
+    public void generateImageAndColors(String path, boolean isNotif) {
+        this.songPath = path;
+        this.isNotif = isNotif;
         new AsyncTask<Void, Void, Void>() {
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
 
             @Override
             protected Void doInBackground(Void... params) {
-                if (path != null && !path.equals("")) {
+                if (songPath != null && !songPath.equals("")) {
                     try {
-                        mmr.setDataSource(path);
+                        mmr.setDataSource(songPath);
                         byte[] byteData = mmr.getEmbeddedPicture();
                         if (byteData != null) {
-                            smallBitmap = BitmapPalette.getBitmap(context, byteData, true);
+                            normalBitmap = getBitmap(byteData);
                         } else {
-                            smallBitmap = BitmapFactory.decodeResource(context.getResources(),
+                            normalBitmap = BitmapFactory.decodeResource(context.getResources(),
                                     R.drawable.random);
                         }
                         mmr.release();
@@ -103,38 +77,44 @@ public class BitmapPalette {
                         mmr.release();
                     }
                 } else {
-                    smallBitmap = BitmapFactory.decodeResource(context.getResources(),
+                    normalBitmap = BitmapFactory.decodeResource(context.getResources(),
                             R.drawable.random);
                 }
-                if (smallBitmap == null) {
-                    smallBitmap = BitmapFactory.decodeResource(context.getResources(),
+                if (normalBitmap == null) {
+                    normalBitmap = BitmapFactory.decodeResource(context.getResources(),
                             R.drawable.random);
                 }
-                blurredBitmap = smallBitmap.copy(smallBitmap.getConfig(), true);
-                generateBlurredBitmap(context, blurredBitmap);
-                Palette palette = createPaletteSync(smallBitmap);
-                Palette.Swatch dominantSwatch = checkDominantSwatch(palette);
+                if (normalBitmap != null && !normalBitmap.isRecycled()) {
+                    Bitmap.Config config = normalBitmap.getConfig();
+
+                    blurredBitmap = normalBitmap.copy((config != null) ?
+                            config : Bitmap.Config.ARGB_8888, false);
+
+                    generateBlurredBitmap(context, blurredBitmap);
+                    Palette palette = createPaletteSync(normalBitmap);
+                    Palette.Swatch dominantSwatch = checkDominantSwatch(palette);
 //                    Palette.Swatch vibrantSwatch = checkVibrantSwatch(palette);
-                Palette.Swatch darkVibrantSwatch = checkDarkVibrantSwatch(palette);
+                    Palette.Swatch darkVibrantSwatch = checkDarkVibrantSwatch(palette);
 //                    Palette.Swatch darkMutedSwatch = checkDarkMutedSwatch(palette);
 
-                dominantRGBColor = dominantSwatch.getRgb();
-                dominantTitleTextColor = dominantSwatch.getTitleTextColor();
-                dominantBodyTextColor = dominantSwatch.getBodyTextColor();
+                    dominantRGBColor = dominantSwatch.getRgb();
+                    dominantTitleTextColor = dominantSwatch.getTitleTextColor();
+                    dominantBodyTextColor = dominantSwatch.getBodyTextColor();
 
 //                    vibrantRGBColor = vibrantSwatch.getRgb();
 //                    vibrantTitleTextColor = vibrantSwatch.getTitleTextColor();
 //                    vibrantBodyTextColor = vibrantSwatch.getBodyTextColor();
 //
-                darkVibrantRGBColor = darkVibrantSwatch.getRgb();
-                darkVibrantTitleTextColor = darkVibrantSwatch.getTitleTextColor();
-                darkVibrantBodyTextColor = darkVibrantSwatch.getBodyTextColor();
+                    darkVibrantRGBColor = darkVibrantSwatch.getRgb();
+                    darkVibrantTitleTextColor = darkVibrantSwatch.getTitleTextColor();
+                    darkVibrantBodyTextColor = darkVibrantSwatch.getBodyTextColor();
 //
 //                    if (darkMutedSwatch != null) {
 //                        darkMutedRGBColor = darkMutedSwatch.getRgb();
 //                        darkMutedTitleTextColor = darkMutedSwatch.getTitleTextColor();
 //                        darkMutedBodyTextColor = darkMutedSwatch.getBodyTextColor();
 //                    }
+                }
 
                 return null;
             }
@@ -142,14 +122,15 @@ public class BitmapPalette {
             @Override
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
-                loadImageListener.onImageLoaded();
+                PlayerConstants.ALBUM_ART = normalBitmap;
+                loadImageListener.onImageLoaded(bitmapPalette);
             }
 
         }.execute();
 
     }
 
-    private static void generateBlurredBitmap(Context context, Bitmap bitmap) {
+    private void generateBlurredBitmap(Context context, Bitmap bitmap) {
         RenderScript rs = RenderScript.create(context);
 
 
@@ -162,15 +143,49 @@ public class BitmapPalette {
         output.copyTo(blurredBitmap);
     }
 
-    public static void onDestroy() {
+    private Palette createPaletteSync(Bitmap bitmap) {
+        Palette p = Palette.from(bitmap).generate();
+        return p;
+    }
+
+    private Palette.Swatch checkDominantSwatch(Palette p) {
+        Palette.Swatch vibrant = p.getDominantSwatch();
+        return vibrant;
+    }
+
+    private Palette.Swatch checkVibrantSwatch(Palette p) {
+        Palette.Swatch vibrant = p.getVibrantSwatch();
+        if (vibrant == null) {
+            return checkDominantSwatch(p);
+        } else return vibrant;
+    }
+
+    private Palette.Swatch checkDarkVibrantSwatch(Palette p) {
+        Palette.Swatch darkVibrant = p.getDarkVibrantSwatch();
+        if (darkVibrant == null) {
+            return checkVibrantSwatch(p);
+        } else return darkVibrant;
+    }
+
+    private Palette.Swatch checkDarkMutedSwatch(Palette p) {
+        Palette.Swatch darkMuted = p.getDarkMutedSwatch();
+        return darkMuted;
+    }
+
+    private List<Palette.Swatch> checkAllSwatches(Palette p) {
+        List<Palette.Swatch> swatchList = p.getSwatches();
+        return swatchList;
+    }
+
+    public void onDestroy() {
         resetColors();
-        if (smallBitmap != null && !smallBitmap.isRecycled()) {
-            smallBitmap.recycle();
-            blurredBitmap.recycle();
+        if (normalBitmap != null && !normalBitmap.isRecycled()) {
+            normalBitmap = null;
+            blurredBitmap = null;
         }
     }
 
-    private static void resetColors() {
+    private void resetColors() {
         dominantRGBColor = Color.DKGRAY;
         dominantTitleTextColor = Color.WHITE;
         dominantBodyTextColor = Color.LTGRAY;
@@ -188,9 +203,9 @@ public class BitmapPalette {
         darkMutedBodyTextColor = Color.LTGRAY;
     }
 
-    public static Bitmap getBitmap(Context context, byte[] byteCoverArt, boolean isNotif) {
+    public Bitmap getBitmap(byte[] byteCoverArt) {
 
-        int pixels = isNotif ? calculatePixels(15, context) : calculatePixels(30, context);
+        int pixels = isNotif ? calculatePixels(10, context) : calculatePixels(25, context);
 //        int pixels = calculatePixels(30, context);
 
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -209,7 +224,7 @@ public class BitmapPalette {
         return px;
     }
 
-    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+    public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         final int height = options.outHeight;
         final int width = options.outWidth;
         int inSampleSize = 1;
@@ -227,5 +242,61 @@ public class BitmapPalette {
             }
         }
         return inSampleSize;
+    }
+
+    public Bitmap getNormalBitmap() {
+        return normalBitmap;
+    }
+
+    public Bitmap getBlurredBitmap() {
+        return blurredBitmap;
+    }
+
+    public int getDominantRGBColor() {
+        return dominantRGBColor;
+    }
+
+    public int getDominantTitleTextColor() {
+        return dominantTitleTextColor;
+    }
+
+    public int getDominantBodyTextColor() {
+        return dominantBodyTextColor;
+    }
+
+    public int getVibrantRGBColor() {
+        return vibrantRGBColor;
+    }
+
+    public int getVibrantTitleTextColor() {
+        return vibrantTitleTextColor;
+    }
+
+    public int getVibrantBodyTextColor() {
+        return vibrantBodyTextColor;
+    }
+
+    public int getDarkVibrantRGBColor() {
+        return darkVibrantRGBColor;
+    }
+
+    public int getDarkVibrantTitleTextColor() {
+        return darkVibrantTitleTextColor;
+    }
+
+    public int getDarkVibrantBodyTextColor() {
+        return darkVibrantBodyTextColor;
+    }
+
+    public int getDarkMutedRGBColor() {
+        return darkMutedRGBColor;
+    }
+
+    public int getDarkMutedTitleTextColor() {
+        return darkMutedTitleTextColor;
+    }
+
+    public int getDarkMutedBodyTextColor() {
+        return darkMutedBodyTextColor;
     }
 }

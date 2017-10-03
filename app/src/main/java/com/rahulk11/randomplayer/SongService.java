@@ -15,6 +15,7 @@ import android.util.Log;
 import com.rahulk11.randomplayer.helpers.Listeners;
 import com.rahulk11.randomplayer.helpers.NotificationHandler;
 import com.rahulk11.randomplayer.helpers.PlaybackManager;
+import com.rahulk11.randomplayer.helpers.SongData;
 import com.rahulk11.randomplayer.helpers.UpdateReceiver;
 
 import java.io.IOException;
@@ -146,7 +147,9 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
     @Override
     public void onDestroy() {
         PlaybackManager.isServiceRunning = false;
+        int currProg = 0;
         if(player!=null){
+            currProg = player.getCurrentPosition();
             player.stop();
             player.release();
             player = null;
@@ -157,7 +160,7 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
             notificationHandler.onServiceDestroy();
         if(audioManager!=null)
             audioManager.abandonAudioFocus(focusChangeListener);
-        PlaybackManager.onStopService();
+        PlaybackManager.onStopService(currProg);
     }
 
     @Override
@@ -172,10 +175,10 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
             public void run() {
                 switch (action) {
                     case ACTION_PLAY:
-                        data = intent.getStringExtra(MainActivity.SONG_PATH);
-                        title = intent.getStringExtra(MainActivity.SONG_TITLE);
-                        artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
-                        album = intent.getStringExtra(MainActivity.ALBUM_NAME);
+                        data = intent.getStringExtra(SongData.SONG_PATH);
+                        title = intent.getStringExtra(SongData.SONG_TITLE);
+                        artist = intent.getStringExtra(SongData.ARTIST_NAME);
+                        album = intent.getStringExtra(SongData.ALBUM_NAME);
                         try {
                             isMediaPlayerReset = true;
                             player.reset();
@@ -194,7 +197,7 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
                         } catch (RuntimeException e) {
                             e.printStackTrace();
                         }
-                        PlaybackManager.goAhead = true;
+//                        PlaybackManager.goAhead = true;
 //                        mediaPlayerListener.onMediaPlayerStarted(player);
                         break;
                     case ACTION_PAUSE:
@@ -214,21 +217,20 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
                                 mediaPlayerListener.onMediaPlayerStarted(player);
                             }
                         }
-                        PlaybackManager.goAhead = true;
+//                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_STOP:
                         Log.d("AudioFocus", "State: " + result);
                         if (player != null) {
                             stopSelf();
                         }
-                        PlaybackManager.goAhead = true;
                         break;
                     case ACTION_SEEK:
                         seekTo = intent.getIntExtra("seekTo", -1);
-                        data = intent.getStringExtra(MainActivity.SONG_PATH);
-                        title = intent.getStringExtra(MainActivity.SONG_TITLE);
-                        artist = intent.getStringExtra(MainActivity.ARTIST_NAME);
-                        album = intent.getStringExtra(MainActivity.ALBUM_NAME);
+                        data = intent.getStringExtra(SongData.SONG_PATH);
+                        title = intent.getStringExtra(SongData.SONG_TITLE);
+                        artist = intent.getStringExtra(SongData.ARTIST_NAME);
+                        album = intent.getStringExtra(SongData.ALBUM_NAME);
                         boolean resume = intent.getBooleanExtra("resume", false);
                         if (player != null) {
                             try {
@@ -254,14 +256,16 @@ public class SongService extends Service implements MediaPlayer.OnCompletionList
 //                                    notificationHandler.showNotif(title, artist, album, true);
                                 }
                             } catch (IOException e) {
+                                PlaybackManager.goAhead = true;
                                 e.printStackTrace();
                             } catch (IllegalStateException e) {
+                                PlaybackManager.goAhead = true;
                                 e.printStackTrace();
                             } catch (RuntimeException e) {
+                                PlaybackManager.goAhead = true;
                                 e.printStackTrace();
                             }
                         }
-                        PlaybackManager.goAhead = true;
                         break;
                     case UPDATE_NOTIF:
                         notificationHandler.updateNotif(title, artist, album, true);

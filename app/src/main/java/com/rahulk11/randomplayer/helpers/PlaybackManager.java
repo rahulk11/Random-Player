@@ -7,12 +7,15 @@ import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.provider.MediaStore;
 
 import com.rahulk11.randomplayer.MainActivity;
 import com.rahulk11.randomplayer.SongService;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 /**
@@ -22,13 +25,21 @@ import java.util.HashMap;
 public class PlaybackManager {
     public static final String songPref = "songPref";
     public static boolean isFirstLoad = true;
-    public static ArrayList<HashMap<String, String>> songsList = new ArrayList<HashMap<String, String>>();
-    public static ArrayList<Integer> shufflePosList = new ArrayList<Integer>();
+    private static ArrayList<SongData> songsList = new ArrayList<SongData>();
+    public static ArrayList<Integer> shuffledPosList = new ArrayList<Integer>();
+    private static int CURR_POS = 0;
     public static boolean isServiceRunning = false, isManuallyPaused = false;
     public static boolean goAhead = true;
     private static Context mContext;
     private static SharedPreferences sharedPref;
     private static PlaybackManager playbackManager;
+    private static Handler handler = new Handler();
+    private static Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+
+        }
+    };
     private Uri allsongsuri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     private String[] projectionSongs = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA, MediaStore.Audio.Media.ALBUM,
@@ -37,16 +48,19 @@ public class PlaybackManager {
     private Listeners.LoadSongListener loadSongListener = new Listeners.LoadSongListener() {
 
         @Override
-        public void onSongLoaded() {
-            ((MainActivity) mContext).setAllSongs();
+        public void onSongLoaded(ArrayList<SongData> songsList) {
+            ((MainActivity) mContext).setAllSongs(songsList);
         }
     };
 
     private PlaybackManager(Context mContext) {
         this.mContext = mContext;
         isFirstLoad = true;
+        if (songsList == null) {
+            songsList = new ArrayList<SongData>();
+        }
         sharedPref = mContext.getSharedPreferences(songPref, mContext.MODE_PRIVATE);
-        createPlayList();
+        new LoadSongsAsync().execute();
     }
 
     private PlaybackManager(Context mContext, Listeners.LoadSongListener loadSongListener, Uri allsongsuri) {
@@ -56,7 +70,7 @@ public class PlaybackManager {
             this.loadSongListener = loadSongListener;
         if (allsongsuri != null)
             this.allsongsuri = allsongsuri;
-        createPlayList();
+        new LoadSongsAsync().execute();
     }
 
     public static PlaybackManager getInstance(Context mContext) {
@@ -66,44 +80,54 @@ public class PlaybackManager {
         return playbackManager;
     }
 
+    public boolean ifInstanceNull() {
+        if (playbackManager == null)
+            return true;
+        else return false;
+    }
+
     public static void stopService() {
         mContext.startService(
                 new Intent(mContext, SongService.class).setAction(SongService.ACTION_STOP));
     }
 
-    public static void onStopService() {
+    public static void onStopService(int currProg) {
         ((MainActivity) mContext).setPlayPauseView(false);
-        shufflePosList.clear();
+
+        SongData songData = getPlayingSongPref();
+        songData.setSongProg(currProg);
+        setPlayingSongPref(songData);
+
         songsList.clear();
-        songsList = null;
-        shufflePosList = null;
+        shuffledPosList.clear();
         sharedPref = null;
 
         playbackManager = null;
-        mContext = null;
         isServiceRunning = false;
         goAhead = true;
         isFirstLoad = true;
         isManuallyPaused = false;
-        BitmapPalette.onDestroy();
+
+        ((MainActivity) mContext).finish();
+//        mContext = null;
     }
 
     public static boolean playPauseEvent(boolean headphone, boolean isPlaying, boolean isResume, int seekProgress) {
-        HashMap<String, String> hashMap = getPlayingSongPref();
+        SongData songData = getPlayingSongPref();
         if (headphone || isPlaying) {
             goAhead = false;
             ((MainActivity) mContext).setPlayPauseView(false);
             mContext.startService(
                     new Intent(mContext, SongService.class).setAction(SongService.ACTION_PAUSE));
-            hashMap.put(MainActivity.SONG_PROGRESS, "" + SongService.getCurrPos());
-            setPlayingSongPref(hashMap);
+            songData.setSongProg(SongService.getCurrPos());
+            setPlayingSongPref(songData);
             return false;
         } else {
             isManuallyPaused = false;
-            if (hashMap != null && !android.text.TextUtils.isEmpty(hashMap.get(MainActivity.SONG_PATH))) {
+            if (songData != null && !android.text.TextUtils.isEmpty(songData.getSongPath())) {
                 if (seekProgress != -1)
-                    seekTo(seekProgress, isResume, hashMap);
-                else playSong(hashMap);
+                    seekTo(seekProgress, isResume, songData);
+                else playSong(songData);
                 return true;
             }
         }
@@ -111,76 +135,77 @@ public class PlaybackManager {
         return false;
     }
 
-    public static void playSong(final HashMap<String, String> hashMap) {
+    public static void playSong(final SongData songData) {
         goAhead = false;
         isManuallyPaused = false;
-        setPlayingSongPref(hashMap);
+        setPlayingSongPref(songData);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Intent i = new Intent(mContext, SongService.class);
                 i.setAction(SongService.ACTION_PLAY);
-                i.putExtra(MainActivity.SONG_PATH, hashMap.get(MainActivity.SONG_PATH));
-                i.putExtra(MainActivity.SONG_TITLE, hashMap.get(MainActivity.SONG_TITLE));
-                i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
-                i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
+                i.putExtra(SongData.SONG_PATH, songData.getSongPath());
+                i.putExtra(SongData.SONG_TITLE, songData.getSongTitle());
+                i.putExtra(SongData.ARTIST_NAME, songData.getSongArtist());
+                i.putExtra(SongData.ALBUM_NAME, songData.getSongAlbum());
                 mContext.startService(i);
-                int pos = Integer.parseInt(hashMap.get(MainActivity.SONG_POS));
-                if (!shufflePosList.contains(pos)) {
-                    shufflePosList.add(pos);
-                }
+//                int pos = Integer.parseInt(hashMap.get(MainActivity.SONG_POS));
+//                if (!shufflePosList.contains(pos)) {
+//                    shufflePosList.add(pos);
+//                }
             }
         }).start();
-        ((MainActivity) mContext).loadSongInfo(hashMap, true);
     }
 
-    private static void seekTo(final int progress, final boolean resume, final HashMap<String, String> hashMap) {
+    private static void seekTo(final int progress, final boolean resume, final SongData songData) {
         if (goAhead) {
             goAhead = false;
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     Intent i = new Intent(mContext, SongService.class);
-                    if (hashMap != null) {
-                        i.putExtra(MainActivity.SONG_PATH, hashMap.get(MainActivity.SONG_PATH));
-                        i.putExtra(MainActivity.SONG_TITLE, hashMap.get(MainActivity.SONG_TITLE));
-                        i.putExtra(MainActivity.ARTIST_NAME, hashMap.get(MainActivity.ARTIST_NAME));
-                        i.putExtra(MainActivity.ALBUM_NAME, hashMap.get(MainActivity.ALBUM_NAME));
+                    if (songData != null) {
+                        i.putExtra(SongData.SONG_PATH, songData.getSongPath());
+                        i.putExtra(SongData.SONG_TITLE, songData.getSongTitle());
+                        i.putExtra(SongData.ARTIST_NAME, songData.getSongArtist());
+                        i.putExtra(SongData.ALBUM_NAME, songData.getSongAlbum());
                     }
                     i.setAction(SongService.ACTION_SEEK);
                     i.putExtra("seekTo", progress);
                     if (resume) i.putExtra("resume", true);
                     else i.putExtra("resume", false);
                     mContext.startService(i);
-                    int pos = Integer.parseInt(hashMap.get(MainActivity.SONG_POS));
-                    if (!shufflePosList.contains(pos)) {
-                        shufflePosList.add(pos);
-                    }
+//                    int pos = Integer.parseInt(hashMap.get(MainActivity.SONG_POS));
+//                    if (!shufflePosList.contains(pos)) {
+//                        shufflePosList.add(pos);
+//                    }
                 }
             }).start();
-//            ((MainActivity) mContext).loadSongInfo(hashMap, true);
         }
+    }
+
+    public void playOnClick(int pos) {
+        SongData songData = songsList.get(pos);
+        CURR_POS = shuffledPosList.indexOf(pos);
+        playSong(songData);
     }
 
     public static void playNext(boolean isShuffle) {
         if (goAhead) {
             goAhead = false;
             MainActivity.shouldContinue = false;
-            String lastPos = getPlayingSongPref().get(MainActivity.SONG_POS);
-            int pos = Integer.parseInt((android.text.TextUtils.isEmpty(lastPos)) ? "0" : lastPos);
+            int i;
             if (isShuffle) {
-                if (shufflePosList!=null && shufflePosList.size()>0 && shufflePosList.contains(pos)) {
-                    int index = shufflePosList.indexOf(pos);
-                    if (index < (shufflePosList.size() - 1))
-                        pos = shufflePosList.get(++index);
-                    else pos = shufflePos(false);
-                } else pos = shufflePos(false);
-            } else pos += 1;
-
-            if (pos > -1 && pos < songsList.size()) {
-                HashMap<String, String> hashMap = songsList.get(pos);
-                playSong(hashMap);
+                i = shuffledPosList.get(++CURR_POS);
+                if (i < 0 || i > shuffledPosList.size() - 1) {
+                    i = (shuffledPosList.size() - 1) / 2;
+                    CURR_POS = i;
+                }
+            } else {
+                i = ++CURR_POS;
             }
+            SongData songData = songsList.get(i);
+            playSong(songData);
         }
     }
 
@@ -188,18 +213,13 @@ public class PlaybackManager {
         if (goAhead) {
             goAhead = false;
             MainActivity.shouldContinue = false;
-            int pos = Integer.parseInt(getPlayingSongPref().get(MainActivity.SONG_POS));
-            if (isShuffle && shufflePosList.contains(pos)) {
-                int index = shufflePosList.indexOf(pos);
-                if (index != 0) pos = shufflePosList.get(--index);
-                else {
-                    pos = shufflePos(true);
-                }
-            } else pos -= 1;
-            if (pos > -1 && pos < songsList.size()) {
-                HashMap<String, String> hashMap = songsList.get(pos);
-                playSong(hashMap);
+            int i = shuffledPosList.get(--CURR_POS);
+            if (i < 0 || i > shuffledPosList.size() - 1) {
+                i = (shuffledPosList.size() - 1) / 2;
+                CURR_POS = i;
             }
+            SongData songData = songsList.get(i);
+            playSong(songData);
         }
     }
 
@@ -207,88 +227,71 @@ public class PlaybackManager {
         ((MainActivity) mContext).setSeekProgress();
     }
 
-    public static void showNotif(boolean updateColors) {
+    public void showNotif(boolean updateColors) {
         if (updateColors)
             ((MainActivity) mContext).setBitmapColors();
         if (!isFirstLoad)
             mContext.startService(new Intent(mContext, SongService.class).setAction(SongService.UPDATE_NOTIF));
     }
 
-    public static HashMap<String, String> getPlayingSongPref() {
-        HashMap<String, String> hashMap = new HashMap<>();
-        if (sharedPref != null) {
-            hashMap.put(MainActivity.SONG_TITLE, sharedPref.getString(MainActivity.SONG_TITLE, ""));
-            hashMap.put(MainActivity.SONG_ID, sharedPref.getString(MainActivity.SONG_ID, ""));
-            hashMap.put(MainActivity.ARTIST_NAME, sharedPref.getString(MainActivity.ARTIST_NAME, ""));
-            hashMap.put(MainActivity.ALBUM_NAME, sharedPref.getString(MainActivity.ALBUM_NAME, ""));
-            hashMap.put(MainActivity.SONG_DURATION, sharedPref.getString(MainActivity.SONG_DURATION, "" + 0));
-            hashMap.put(MainActivity.SONG_PATH, sharedPref.getString(MainActivity.SONG_PATH, ""));
-            hashMap.put(MainActivity.SONG_POS, sharedPref.getString(MainActivity.SONG_POS, -1 + ""));
-            hashMap.put(MainActivity.SONG_PROGRESS, sharedPref.getString(MainActivity.SONG_PROGRESS, 0 + ""));
+    public static SongData getPlayingSongPref() {
+        SongData songData = new SongData();
+        if (sharedPref == null) {
+            sharedPref = mContext.getSharedPreferences(songPref, mContext.MODE_PRIVATE);
         }
-        return hashMap;
+        songData.setSongTitle(sharedPref.getString(SongData.SONG_TITLE, ""));
+        songData.setSongName(sharedPref.getString(SongData.DISPLAY_NAME, ""));
+        songData.setSongId(sharedPref.getInt(SongData.SONG_ID, 0));
+        songData.setSongArtist(sharedPref.getString(SongData.ARTIST_NAME, ""));
+        songData.setSongAlbum(sharedPref.getString(SongData.ALBUM_NAME, ""));
+        songData.setSongDur(sharedPref.getInt(SongData.SONG_DURATION, 0));
+        songData.setSongPath(sharedPref.getString(SongData.SONG_PATH, ""));
+        songData.setSongProg(sharedPref.getInt(SongData.SONG_PROGRESS, 0));
+//      songData.setSongPos(sharedPref.getInt(MainActivity.SONG_POS, 0));
+
+        return songData;
     }
 
-    private static void setPlayingSongPref(final HashMap<String, String> songDetail) {
+    private static void setPlayingSongPref(final SongData songData) {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                if (sharedPref == null) {
+                    sharedPref = mContext.getSharedPreferences(songPref, mContext.MODE_PRIVATE);
+                }
                 SharedPreferences.Editor prefEditor = sharedPref.edit();
-                prefEditor.putString(MainActivity.SONG_TITLE, songDetail.get(MainActivity.SONG_TITLE))
-                        .putString(MainActivity.SONG_ID, songDetail.get(MainActivity.SONG_ID))
-                        .putString(MainActivity.ARTIST_NAME, songDetail.get(MainActivity.ARTIST_NAME))
-                        .putString(MainActivity.ALBUM_NAME, songDetail.get(MainActivity.ALBUM_NAME))
-                        .putString(MainActivity.SONG_DURATION, songDetail.get(MainActivity.SONG_DURATION))
-                        .putString(MainActivity.SONG_PATH, songDetail.get(MainActivity.SONG_PATH))
-                        .putString(MainActivity.SONG_POS, songDetail.get(MainActivity.SONG_POS))
-                        .putString(MainActivity.SONG_PROGRESS, songDetail.get(MainActivity.SONG_PROGRESS));
-
+                prefEditor.putString(SongData.SONG_TITLE, songData.getSongTitle())
+                        .putString(SongData.DISPLAY_NAME, songData.getSongName())
+                        .putInt(SongData.SONG_ID, songData.getSongId())
+                        .putString(SongData.ARTIST_NAME, songData.getSongArtist())
+                        .putString(SongData.ALBUM_NAME, songData.getSongAlbum())
+                        .putInt(SongData.SONG_DURATION, songData.getSongDur())
+                        .putString(SongData.SONG_PATH, songData.getSongPath())
+                        .putInt(SongData.SONG_PROGRESS, songData.getSongProg());
+//                        .putInt(MainActivity.SONG_POS, songData.getSongPos());
                 prefEditor.commit();
             }
         }).start();
     }
 
-    private static int shufflePos(boolean isPrev) {
-        int min = 0, max = (songsList.size() - 1);
-        int range = (max - min) + 1;
-        int shuffledPos = (int) (Math.random() * range) + min;
-        if (!shufflePosList.contains(shuffledPos)) {
-            if (!isPrev)
-                shufflePosList.add(shuffledPos);
-            else {
-                int currPos = Integer.parseInt(getPlayingSongPref().get(MainActivity.SONG_POS));
-                if (shufflePosList.contains(currPos)) {
-                    shufflePosList.add((shufflePosList.indexOf(currPos)), shuffledPos);
-                }
-            }
-            return shuffledPos;
-        }
-//        if (shuffledPos != Integer.parseInt(getPlayingSongPref().get(MainActivity.SONG_POS)))
-//            return shuffledPos;
-        else if (shufflePosList.size() < songsList.size())
-            return shufflePos(isPrev);
-        else {
-            shufflePosList.clear();
-            return shufflePos(isPrev);
-        }
-    }
-
-    private void createPlayList() {
-        new LoadSongsAsync().execute();
-    }
-
     private class LoadSongsAsync extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
 
         @Override
         protected Void doInBackground(Void... params) {
             Cursor cursor = mContext.getContentResolver().query(allsongsuri, projectionSongs,
                     selection, null, null);
 
-            if (cursor != null) {
+            if (cursor != null && songsList.isEmpty()) {
+                shuffledPosList.clear();
                 if (cursor.moveToFirst()) {
+                    SongData songData;
                     int i = 0;
                     do {
-                        HashMap<String, String> song = new HashMap<String, String>();
                         String song_title = cursor
                                 .getString(cursor
                                         .getColumnIndex(MediaStore.Audio.Media.TITLE));
@@ -310,20 +313,29 @@ public class PlaybackManager {
                         int song_duration = cursor.getInt(cursor
                                 .getColumnIndex(MediaStore.Audio.Media.DURATION));
 
-                        song.put(MainActivity.SONG_TITLE, song_title);
-                        song.put(MainActivity.DISPLAY_NAME, display_name);
-                        song.put(MainActivity.SONG_ID, "" + song_id);
-                        song.put(MainActivity.SONG_PATH, song_path);
-                        song.put(MainActivity.ALBUM_NAME, album_name);
-                        song.put(MainActivity.ARTIST_NAME, artist_name);
-                        song.put(MainActivity.SONG_DURATION, "" + song_duration);
-                        song.put(MainActivity.SONG_POS, "" + i);
-                        songsList.add(song);
-                        ++i;
+
+                        songData = new SongData(song_id, display_name, song_title,
+                                artist_name, album_name, song_duration, song_path);
+                        songsList.add(songData);
+                        shuffledPosList.add(i);
+                        i += 1;
                     } while (cursor.moveToNext());
 
                 }
                 cursor.close();
+                if (songsList != null && !songsList.isEmpty()) {
+                    Collections.sort(songsList, new Comparator<SongData>() {
+                        @Override
+                        public int compare(SongData o1, SongData o2) {
+                            return o1.getSongTitle()
+                                    .compareToIgnoreCase(o2.getSongTitle());
+                        }
+                    });
+                }
+                if (shuffledPosList != null && !shuffledPosList.isEmpty()) {
+                    Collections.shuffle(shuffledPosList);
+                }
+
             }
             return null;
         }
@@ -331,7 +343,7 @@ public class PlaybackManager {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            loadSongListener.onSongLoaded();
+            loadSongListener.onSongLoaded(songsList);
         }
     }
 
